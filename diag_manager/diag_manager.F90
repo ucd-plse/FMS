@@ -181,7 +181,7 @@ MODULE diag_manager_mod
 
   USE time_manager_mod, ONLY: set_time, set_date, get_time, time_type, OPERATOR(>=), OPERATOR(>),&
        & OPERATOR(<), OPERATOR(==), OPERATOR(/=), OPERATOR(/), OPERATOR(+), ASSIGNMENT(=), get_date, &
-       & get_ticks_per_second
+       & get_ticks_per_second, decrement_date
   USE mpp_io_mod, ONLY: mpp_open, mpp_close, mpp_get_maxunits
   USE mpp_mod, ONLY: mpp_get_current_pelist, mpp_pe, mpp_npes, mpp_root_pe, mpp_sum
 
@@ -538,6 +538,7 @@ CONTAINS
     LOGICAL :: mask_variant1, verbose1
     LOGICAL :: cm_found
     CHARACTER(len=128) :: msg
+    INTEGER :: year, month, day, hour, minute, second, tick
 
     ! get stdout unit number
     stdout_unit = stdout()
@@ -642,6 +643,23 @@ CONTAINS
           freq = files(file_num)%output_freq
           output_units = files(file_num)%output_units
           output_fields(ind)%next_output = diag_time_inc(init_time, freq, output_units, err_msg=msg)
+
+          ! The following if-block fixes "missing monthly (or daily or hourly) mean outputs for CESM runs
+          ! by bringing back the end of the first output interval to midnight. Moving the end date of the
+          ! first output interval to an earlier date is due to one ocean coupling lag in CESM. Correcting
+          ! the first output interval automatically corrects the subsequent intervals, including the
+          ! (previously missing) last output interval.
+          ! NOTE: This TEMPORARY fix ASSUMES that all runs begin and end at midnight."
+
+          call get_date(init_time, year, month, day, hour, minute, second, tick)
+          if (      ( output_units==DIAG_MONTHS .or. &
+                      output_units==DIAG_DAYS .or. &
+                      (output_units==DIAG_HOURS .and. freq>hour) ) &
+              .and. ( hour/=0 .or. minute/=0 .or. second/=0 ) ) then
+            output_fields(ind)%next_output = decrement_date(output_fields(ind)%next_output, &
+                                                            0, 0, 0, hour, minute, second, tick)
+          endif
+
           IF ( msg /= '' ) THEN
              IF ( fms_error_handler('diag_manager_mod::register_diag_field',&
                   & ' file='//TRIM(files(file_num)%name)//': '//TRIM(msg),err_msg)) RETURN
