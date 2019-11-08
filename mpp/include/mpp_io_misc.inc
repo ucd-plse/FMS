@@ -183,6 +183,10 @@
 #endif
       endif
 
+#ifdef use_PIO
+      call mpp_pio_init()
+#endif
+
 #ifdef CRAYPVP
 !we require every file to be assigned threadwise: PVPs default to global, and are reset here
       call ASSIGN( 'assign -P thread p:%', error )
@@ -198,6 +202,7 @@
       endif
       module_is_initialized = .TRUE.
       return
+
     end subroutine mpp_io_init
 
 

@@ -364,6 +364,11 @@ use mpp_domains_mod, only: domainUG, &
                            mpp_get_UG_domain_pelist
 !----------
 
+#ifdef use_PIO
+use pio,          only : File_desc_t
+use mpp_pio_mod,  only : mpp_pio_init
+#endif
+
 implicit none
 private
 
@@ -494,6 +499,9 @@ type :: atttype
 !ug support
      type(domainUG),pointer :: domain_ug => null() !Is this actually pointed to?
 !----------
+#ifdef use_PIO
+     type (File_desc_t) :: fileDesc
+#endif
   end type filetype
 
 !***********************************************************************
