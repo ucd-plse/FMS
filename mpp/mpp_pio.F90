@@ -42,23 +42,24 @@
 ! </CONTACT>
 
 ! <OVERVIEW>
-!   <TT>mpp_io_pio_mod</TT>, is ... TODO
+!   <TT>mpp_pio_mod</TT>, is ... TODO
 ! </OVERVIEW>
 
 ! <DESCRIPTION>
 !   TODO
 ! </DESCRIPTION>
 
-module mpp_io_pio_mod
+module mpp_pio_mod
+#ifdef use_PIO
 
 #include <fms_platform.h>
-#define _MAX_FILE_UNITS 1024
 
-!use pio, only : TODO
+use pio, only : iosystem_desc_t
 
 implicit none
 private
 
 integer :: TODO
 
-end module mpp_io_pio_mod
+#endif
+end module mpp_pio_mod
