@@ -54,12 +54,40 @@ module mpp_pio_mod
 
 #include <fms_platform.h>
 
-use pio, only : iosystem_desc_t
+  use mpp_mod,         only : input_nml_file
+  use pio, only : iosystem_desc_t
 
-implicit none
-private
+  implicit none
+  private
 
-integer :: TODO
+  character(len=64)   :: pio_netcdf_format, pio_typename
+  integer             :: pio_numiotasks, pio_rearranger, pio_root, pio_stride
+  namelist /mpp_pio_nml/ pio_netcdf_format, pio_numiotasks, pio_rearranger, &
+                         pio_root, pio_stride, pio_typename
+
+  contains
+
+  subroutine mpp_pio_init()
+    integer :: unit_begin, unit_end, unit_nml, io_status, unit
+    logical :: opened
+
+    ! namelist
+#ifdef INTERNAL_FILE_NML
+      read (input_nml_file, mpp_pio_nml, iostat=io_status)
+#else
+      unit_begin = 103
+      unit_end   = 512
+      do unit_nml = unit_begin, unit_end
+         inquire(unit_nml, OPENED=opened )
+         if( .NOT.opened )exit
+      end do
+
+      open(unit_nml,file='input.nml', iostat=io_status)
+      read(unit_nml,mpp_pio_nml,iostat=io_status)
+      close(unit_nml)
+#endif
+
+  end subroutine mpp_pio_init
 
 #endif
 end module mpp_pio_mod
