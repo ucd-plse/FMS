@@ -51,7 +51,7 @@
 
 module mpp_pio_mod
 
-! PIO only works with MPI:
+! PIO requires MPI:
 #ifndef use_libMPI
 #undef use_PIO
 #endif
@@ -62,13 +62,19 @@ module mpp_pio_mod
 
   use mpp_mod,  only : input_nml_file
   use mpp_mod,  only : mpp_pe, mpp_root_pe, mpp_npes, get_mpp_comm
-  use pio,      only : PIO_init
-  use pio,      only : iosystem_desc_t
+  use mpp_mod,  only : mpp_error, FATAL
+  use pio,      only : PIO_init, pio_createfile
+  use pio,      only : pio_createfile
+  use pio,      only : File_desc_t, iosystem_desc_t
+  use pio,      only : pio_write, pio_clobber
+  use pio,      only : pio_iotype_netcdf, pio_iotype_pnetcdf
+  use mpp_parameter_mod,  only : MPP_WRONLY, MPP_RDONLY, MPP_APPEND, MPP_OVERWR
 
   implicit none
   private
 
   public :: mpp_pio_init
+  public :: mpp_pio_openfile
 
   character(len=64)   :: pio_netcdf_format, pio_typename
   integer             :: pio_numiotasks, pio_rearranger, pio_root, pio_stride
@@ -76,6 +82,7 @@ module mpp_pio_mod
                          pio_root, pio_stride, pio_typename
 
   type(iosystem_desc_t) :: pio_iosystem     ! The ParallelIO system set up by PIO_init
+  integer               :: pio_iotype       ! PIO_IOTYPE_NETCDF or PNETCDF
   integer               :: pio_optbase = 1  ! Start index of I/O processors
 
   contains
@@ -102,6 +109,14 @@ module mpp_pio_mod
       close(unit_nml)
 #endif
 
+    if (trim(pio_typename) == "netcdf") then
+      pio_iotype = pio_iotype_netcdf
+    elseif (trim(pio_typename) == "pnetcdf") then
+      pio_iotype = pio_iotype_pnetcdf
+    else
+      call mpp_error(FATAL,'Unknown PIO filetype')
+    endif
+
     pe = mpp_pe()
     npes = mpp_npes()
     localcomm = get_mpp_comm()
@@ -123,6 +138,33 @@ module mpp_pio_mod
     print *, "initialized PIO: ", localcomm
 
   end subroutine mpp_pio_init
+
+  function mpp_pio_openfile(fileDesc, fileName, action_flag)
+    type(File_desc_t),  intent(inout)         :: fileDesc
+    character(len=*),   intent(in)            :: fileName
+    integer,            intent(in)            :: action_flag
+    ! local
+    integer :: mpp_pio_openfile, stat
+    integer :: nmode
+
+    print *, "OPENING >>>>>>>>>>>>>>>> ", trim(fileName)
+
+    if (action_flag == MPP_WRONLY) then
+      nmode = pio_write
+    else if (action_flag == MPP_OVERWR) then
+      nmode = pio_clobber
+    else
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+    endif
+
+    if (action_flag == MPP_WRONLY .or. action_flag == MPP_OVERWR ) then
+      stat = pio_createfile(pio_iosystem, fileDesc, pio_iotype, "pio_"//trim(fileName), nmode)
+    else
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+    endif
+
+    mpp_pio_openfile = stat
+  end function mpp_pio_openfile
 
 #endif
 end module mpp_pio_mod
