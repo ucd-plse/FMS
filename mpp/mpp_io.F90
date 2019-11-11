@@ -366,7 +366,7 @@ use mpp_domains_mod, only: domainUG, &
 
 #ifdef use_PIO
 use pio,          only : File_desc_t
-use mpp_pio_mod,  only : mpp_pio_init
+use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_openfile
 #endif
 
 implicit none
