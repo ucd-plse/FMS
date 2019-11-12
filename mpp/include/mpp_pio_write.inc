@@ -389,7 +389,6 @@
       logical :: domain_exist
       type(domain2d), pointer :: io_domain => NULL()
 
-#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       !--- the shift and cartesian information is needed in mpp_write_meta_field from all the pe.
       !--- we may revise this in the future.
@@ -460,23 +459,23 @@
 !write axis def
 !space axes are always floats, time axis is always double
           if( ASSOCIATED(axis%data) )then !space axis
-              error = NF_DEF_DIM( mpp_file(unit)%ncid, axis%name, axis%len, axis%did )
+              error = PIO_def_dim( mpp_file(unit)%fileDesc, axis%name, axis%len, axis%did)
               call netcdf_err( error, mpp_file(unit), axis )
               if(pack_size == 1) then
-                 error = NF_DEF_VAR( mpp_file(unit)%ncid, axis%name, NF_DOUBLE, 1, axis%did, axis%id )
+                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_DOUBLE, (/axis%did/), axis%id)
               else ! pack_size == 2
-                 error = NF_DEF_VAR( mpp_file(unit)%ncid, axis%name, NF_FLOAT, 1, axis%did, axis%id )
+                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_REAL, (/axis%did/), axis%id)
               endif
               call netcdf_err( error, mpp_file(unit), axis )
           else                            !time axis
               if( mpp_file(unit)%id.NE.-1 ) &
                    call mpp_error( FATAL, 'MPP_WRITE_META_AXIS: There is already a time axis for this file.' )
-              error = NF_DEF_DIM( mpp_file(unit)%ncid, axis%name, NF_UNLIMITED, axis%did )
+              error = PIO_def_dim( mpp_file(unit)%fileDesc%fh, axis%name, PIO_UNLIMITED, axis%did)
               call netcdf_err( error, mpp_file(unit), axis )
               if(pack_size == 1) then
-                 error = NF_DEF_VAR( mpp_file(unit)%ncid, axis%name, NF_DOUBLE, 1, axis%did, axis%id )
+                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_DOUBLE, (/axis%did/), axis%id)
               else ! pack_size == 2
-                 error = NF_DEF_VAR( mpp_file(unit)%ncid, axis%name, NF_FLOAT, 1, axis%did, axis%id )
+                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_REAL, (/axis%did/), axis%id)
               endif
               call netcdf_err( error, mpp_file(unit), axis )
               mpp_file(unit)%id = axis%id !file ID is the same as time axis varID
@@ -552,10 +551,6 @@
       mpp_file(unit)%ndim = max(1,mpp_file(unit)%ndim + 1)
 
 !      call mpp_clock_end(mpp_write_clock)
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
       return
     end subroutine mpp_write_meta_axis_r1d
 
@@ -977,9 +972,9 @@
     end subroutine write_attribute
 
   subroutine write_attribute_pio(unit, attr_id, attr_name, rval, ival, cval, pack)
-    integer, intent(in)             :: unit
-    type(var_desc_t), intent(in)    :: attr_id
-    character(len=*), intent(in)    :: attr_name
+    integer,          intent(in) :: unit
+    integer,          intent(in) :: attr_id
+    character(len=*), intent(in) :: attr_name
     real,             intent(in), optional :: rval(:)
     integer,          intent(in), optional :: ival(:)
     character(len=*), intent(in), optional :: cval

@@ -365,8 +365,9 @@ use mpp_domains_mod, only: domainUG, &
 !----------
 
 #ifdef use_PIO
-use pio,          only : File_desc_t, var_desc_t, PIO_GLOBAL
-use pio,          only : PIO_put_att
+use pio,          only : File_desc_t, PIO_GLOBAL, PIO_UNLIMITED
+use pio,          only : PIO_put_att, PIO_def_dim, PIO_def_var
+use pio,          only : PIO_DOUBLE, PIO_REAL
 use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_openfile
 #endif
 
