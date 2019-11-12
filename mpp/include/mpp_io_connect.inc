@@ -901,7 +901,6 @@
       logical :: collect
       integer :: i, j
 
-#ifndef use_PIO
       call mpp_clock_begin(mpp_close_clock)      
       if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_CLOSE: must first call mpp_io_init.' )
       if( unit.EQ.NULLUNIT .OR. unit .EQ. stderr() ) then
@@ -926,7 +925,12 @@
       if( mpp_file(unit)%opened) then
          if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
 #ifdef use_netCDF
+#ifndef use_PIO
             error = NF_CLOSE(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+#else
+        print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+        call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
 #endif    
          else
             close(unit,status=status)
@@ -1008,7 +1012,9 @@
       mpp_file(unit)%threading = -1
       mpp_file(unit)%fileset   = -1
       mpp_file(unit)%record    = -1
+#ifndef use_PIO
       mpp_file(unit)%ncid      = -1
+#endif
       mpp_file(unit)%opened = .FALSE.
       mpp_file(unit)%initialized = .FALSE.
       mpp_file(unit)%id = -1
@@ -1035,10 +1041,6 @@
 
       call mpp_clock_end(mpp_close_clock)
       return
-#else
-        print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-        call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
     end subroutine mpp_close
     
     
