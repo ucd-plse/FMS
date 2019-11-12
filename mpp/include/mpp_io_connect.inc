@@ -300,7 +300,7 @@
             read_on_this_pe = .false.
          endif   
       endif   
-      if(pio_flag .AND. form_flag == MPP_NETCDF)
+      if(pio_flag .AND. form_flag == MPP_NETCDF) then
         write_on_this_pe = .true.
         read_on_this_pe = .true.
       endif
@@ -619,43 +619,43 @@
               if(debug) write(*,*) 'Blocksize for create of ', trim(mpp_file(unit)%name),' is ', fsize
               error = mpp_pio_openfile(mpp_file(unit)%fileDesc, mpp_file(unit)%name, action_flag)
               call netcdf_err( error, mpp_file(unit) )
-              if( verbose )print '(a,i6,i16)', 'MPP_OPEN: new netCDF file: pe, ncid=', pe, mpp_file(unit)%ncid
+              if( verbose )print '(a,i6,i16)', 'MPP_OPEN: new netCDF file: pe, filename=', pe, mpp_file(unit)%name
           else if( action_flag.EQ.MPP_OVERWR )then
               if(debug) write(*,*) 'Blocksize for create of ', trim(mpp_file(unit)%name),' is ', fsize
               error = mpp_pio_openfile(mpp_file(unit)%fileDesc, mpp_file(unit)%name, action_flag)
               call netcdf_err( error, mpp_file(unit) )
               action_flag = MPP_WRONLY !after setting clobber, there is no further distinction btwn MPP_WRONLY and MPP_OVERWR
-              if( verbose )print '(a,i6,i16)', 'MPP_OPEN: overwrite netCDF file: pe, ncid=', pe, mpp_file(unit)%ncid
+              if( verbose )print '(a,i6,i16)', 'MPP_OPEN: overwrite netCDF file: pe, filename=', pe, mpp_file(unit)%name
           else if( action_flag.EQ.MPP_APPEND )then
               print *, "debug ", __FILE__, __LINE__
               call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-              inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
-              if (.NOT.exists) call mpp_error(FATAL,'MPP_OPEN:'&
-                   &//trim(mpp_file(unit)%name)//' does not exist.')
-              error=NF__OPEN(trim(mpp_file(unit)%name),NF_WRITE,fsize,mpp_file(unit)%ncid);call netcdf_err(error,mpp_file(unit))
-!get the current time level of the file: writes to this file will be at next time level
-              error = NF_INQ_UNLIMDIM( mpp_file(unit)%ncid, unlim%did )
-              if( error.EQ.NF_NOERR )then
-                  error = NF_INQ_DIM( mpp_file(unit)%ncid, unlim%did, unlim%name, mpp_file(unit)%time_level )
-                  call netcdf_err( error, mpp_file(unit) )
-                  error = NF_INQ_VARID( mpp_file(unit)%ncid, unlim%name, mpp_file(unit)%id )
-                  call netcdf_err( error, mpp_file(unit), unlim )
-              end if
-              if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: append to existing netCDF file: pe, ncid, time_axis_id=',&
-                   pe, mpp_file(unit)%ncid, mpp_file(unit)%id
-              mpp_file(unit)%format=form_flag ! need this for mpp_read
-              call mpp_read_meta(unit, read_time=.FALSE.)
+              !inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
+              !if (.NOT.exists) call mpp_error(FATAL,'MPP_OPEN:'&
+              !     &//trim(mpp_file(unit)%name)//' does not exist.')
+              !error=NF__OPEN(trim(mpp_file(unit)%name),NF_WRITE,fsize,mpp_file(unit)%ncid);call netcdf_err(error,mpp_file(unit))
+!get the curre!nt time level of the file: writes to this file will be at next time level
+              !error = NF_INQ_UNLIMDIM( mpp_file(unit)%ncid, unlim%did )
+              !if( error.EQ.NF_NOERR )then
+              !    error = NF_INQ_DIM( mpp_file(unit)%ncid, unlim%did, unlim%name, mpp_file(unit)%time_level )
+              !    call netcdf_err( error, mpp_file(unit) )
+              !    error = NF_INQ_VARID( mpp_file(unit)%ncid, unlim%name, mpp_file(unit)%id )
+              !    call netcdf_err( error, mpp_file(unit), unlim )
+              !end if
+              !if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: append to existing netCDF file: pe, ncid, time_axis_id=',&
+              !     pe, mpp_file(unit)%ncid, mpp_file(unit)%id
+              !mpp_file(unit)%format=form_flag ! need this for mpp_read
+              !call mpp_read_meta(unit, read_time=.FALSE.)
           else if( action_flag.EQ.MPP_RDONLY )then
               print *, "debug ", __FILE__, __LINE__
               call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-              inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
-              if (.NOT.exists) call mpp_error(FATAL,'MPP_OPEN:'&
-                   &//trim(mpp_file(unit)%name)//' does not exist.')
-              error=NF__OPEN(trim(mpp_file(unit)%name),NF_NOWRITE,fsize,mpp_file(unit)%ncid);call netcdf_err(error,mpp_file(unit))
-              if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: opening existing netCDF file: pe, ncid, time_axis_id=',&
-                   pe, mpp_file(unit)%ncid, mpp_file(unit)%id
-              mpp_file(unit)%format=form_flag ! need this for mpp_read
-              call mpp_read_meta(unit, read_time=.TRUE.)
+              !inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
+              !if (.NOT.exists) call mpp_error(FATAL,'MPP_OPEN:'&
+              !     &//trim(mpp_file(unit)%name)//' does not exist.')
+              !error=NF__OPEN(trim(mpp_file(unit)%name),NF_NOWRITE,fsize,mpp_file(unit)%ncid);call netcdf_err(error,mpp_file(unit))
+              !if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: opening existing netCDF file: pe, ncid, time_axis_id=',&
+              !     pe, mpp_file(unit)%ncid, mpp_file(unit)%id
+              !mpp_file(unit)%format=form_flag ! need this for mpp_read
+              !call mpp_read_meta(unit, read_time=.TRUE.)
           end if
           mpp_file(unit)%opened = .TRUE.
 #elif use_netCDF3
@@ -901,6 +901,7 @@
       logical :: collect
       integer :: i, j
 
+#ifndef use_PIO
       call mpp_clock_begin(mpp_close_clock)      
       if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_CLOSE: must first call mpp_io_init.' )
       if( unit.EQ.NULLUNIT .OR. unit .EQ. stderr() ) then
@@ -1034,6 +1035,10 @@
 
       call mpp_clock_end(mpp_close_clock)
       return
+#else
+        print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+        call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_close
     
     

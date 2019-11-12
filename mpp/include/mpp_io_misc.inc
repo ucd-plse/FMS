@@ -152,7 +152,9 @@
       mpp_file(:)%threading = -1
       mpp_file(:)%fileset   = -1
       mpp_file(:)%record    = -1
+#ifndef use_PIO
       mpp_file(:)%ncid      = -1
+#endif
       mpp_file(:)%opened = .FALSE.
       mpp_file(:)%initialized = .FALSE.
       mpp_file(:)%write_on_this_pe = .FALSE.
@@ -242,7 +244,12 @@
 #ifdef use_netCDF
 !close all open netCDF units
       do unit = maxunits+1,2*maxunits
+#ifndef use_PIO
          if( mpp_file(unit)%opened )error = NF_CLOSE(mpp_file(unit)%ncid)
+#else
+          print *, "debug ", __FILE__, __LINE__
+          call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
       end do
 #endif
 
@@ -293,7 +300,12 @@
 
       if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
 #ifdef use_netCDF
+#ifndef use_PIO
           error = NF_SYNC(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+#else
+          print *, "debug ", __FILE__, __LINE__
+          call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
 #endif
       else
           call FLUSH(unit)

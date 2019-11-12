@@ -365,8 +365,8 @@ use mpp_domains_mod, only: domainUG, &
 !----------
 
 #ifdef use_PIO
-use pio,          only : File_desc_t
-use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_openfile
+use pio,          only : File_desc_t, PIO_GLOBAL
+use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_openfile, write_attribute_pio
 #endif
 
 implicit none
@@ -389,7 +389,7 @@ private
   public :: default_field, default_axis, default_att
 
   !--- public interface from mpp_io_util.h ----------------------
-  public :: mpp_get_iospec, mpp_get_id, mpp_get_ncid, mpp_get_unit_range, mpp_is_valid
+  public :: mpp_get_iospec, mpp_get_id, mpp_get_unit_range, mpp_is_valid
   public :: mpp_set_unit_range, mpp_get_info, mpp_get_atts, mpp_get_fields
   public :: mpp_get_times, mpp_get_axes, mpp_get_recdimid, mpp_get_axis_data, mpp_get_axis_by_name
   public :: mpp_io_set_stack_size, mpp_get_field_index, mpp_get_axis_index
@@ -399,6 +399,9 @@ private
   public :: mpp_get_file_name, mpp_file_is_opened, mpp_attribute_exist
   public :: mpp_io_clock_on, mpp_get_time_axis, mpp_get_default_calendar
   public :: mpp_get_dimension_length, mpp_get_axis_bounds
+#ifndef use_PIO
+  public :: mpp_get_ncid
+#endif
 
   !--- public interface from mpp_io_misc.h ----------------------
   public :: mpp_io_init, mpp_io_exit, netcdf_err, mpp_flush, mpp_get_maxunits, do_cf_compliance
@@ -474,7 +477,12 @@ type :: atttype
   type :: filetype
      private
      character(len=256) :: name
-     integer            :: action, format, access, threading, fileset, record, ncid
+     integer            :: action, format, access, threading, fileset, record
+#ifdef use_PIO
+     type (File_desc_t) :: fileDesc
+#else
+     integer            :: ncid
+#endif
      logical            :: opened, initialized, nohdrs
      integer            :: time_level
      real(DOUBLE_KIND)  :: time
@@ -499,9 +507,6 @@ type :: atttype
 !ug support
      type(domainUG),pointer :: domain_ug => null() !Is this actually pointed to?
 !----------
-#ifdef use_PIO
-     type (File_desc_t) :: fileDesc
-#endif
   end type filetype
 
 !***********************************************************************
@@ -1111,7 +1116,11 @@ contains
 #include <mpp_io_misc.inc>
 #include <mpp_io_connect.inc>
 #include <mpp_io_read.inc>
+#ifndef use_PIO
 #include <mpp_io_write.inc>
+#else
+#include <mpp_pio_write.inc>
+#endif
 
 !----------
 !ug support

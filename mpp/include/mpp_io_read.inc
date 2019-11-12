@@ -222,6 +222,7 @@
       character(len=len(data))        :: text
 
 #ifdef use_netCDF
+#ifndef use_PIO
       if( .NOT.module_is_initialized )call mpp_error( FATAL, 'READ_RECORD: must first call mpp_io_init.' )
       if( .NOT.mpp_file(unit)%opened )call mpp_error( FATAL, 'READ_RECORD: invalid unit number.' )
       if( mpp_file(unit)%threading.EQ.MPP_SINGLE .AND. pe.NE.mpp_root_pe() )return
@@ -273,6 +274,11 @@
           call mpp_error( FATAL, 'Currently dont support non-NetCDF mpp read' )
 
       end if
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
+
 #else
       call mpp_error( FATAL, 'mpp_read_text currently requires use_netCDF option' )
 #endif
@@ -335,6 +341,7 @@
       if(present(read_time)) get_time_info = read_time
 
 #ifdef use_netCDF
+#ifndef use_PIO
 
       if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
         ncid = mpp_file(unit)%ncid
@@ -1077,6 +1084,11 @@
       endif
 
       mpp_file(unit)%initialized = .TRUE.
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
+
 #else
       call mpp_error( FATAL, 'MPP_READ currently requires use_netCDF option' )
 #endif

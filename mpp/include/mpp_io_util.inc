@@ -547,13 +547,14 @@
 !   <IN NAME="unit" TYPE="integer"> </IN>
 ! </FUNCTION>
 
+#ifndef use_PIO
     function mpp_get_ncid(unit)
       integer :: mpp_get_ncid
       integer, intent(in) :: unit
-
       mpp_get_ncid = mpp_file(unit)%ncid
       return
     end function mpp_get_ncid
+#endif
 
   !#####################################################################
     function mpp_get_axis_id(axis)

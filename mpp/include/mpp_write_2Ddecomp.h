@@ -61,6 +61,7 @@
 !we now declare the file to be initialized
 !if this is netCDF we switch file from DEFINE mode to DATA mode
           if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
+#ifndef use_PIO
 #ifdef use_netCDF
 !NOFILL is probably required for parallel: any circumstances in which not advisable?
               error = NF_SET_FILL( mpp_file(unit)%ncid, NF_NOFILL, i ); call netcdf_err( error, mpp_file(unit) )
@@ -72,6 +73,10 @@
                  endif
               endif
               call netcdf_err( error, mpp_file(unit) )
+#endif
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
 #endif
           else
               call mpp_write_meta( unit, 'END', cval='metadata' )
@@ -127,6 +132,7 @@
 
           if( debug )print '(a,2i6,12i6)', 'WRITE_RECORD: PE, unit, start, axsiz=', pe, unit, start, axsiz
 #ifdef use_netCDF
+#ifndef use_PIO
 !write time information if new time
           if( newtime )then
               if( KIND(time).EQ.DOUBLE_KIND )then
@@ -149,6 +155,10 @@
               error = NF_PUT_VARA_INT   ( mpp_file(unit)%ncid, field%id, start, axsiz, packed_data )
           end if
           call netcdf_err( error, mpp_file(unit), field=field )
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
 #endif
       else                      !non-netCDF
           ptr1 = LOC(mpp_io_stack(1))

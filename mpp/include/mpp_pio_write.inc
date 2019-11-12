@@ -145,7 +145,7 @@
       integer,          intent(in), optional :: ival(:)
       character(len=*), intent(in), optional :: cval
       integer, intent(in), optional :: pack
-
+#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
@@ -166,6 +166,10 @@
 !      call mpp_clock_end(mpp_write_clock)
 
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_meta_global
 
 !versions of above to support <rval> and <ival> as scalars (because of f90 strict rank matching)
@@ -202,6 +206,7 @@
       character(len=*), intent(in), optional :: cval
       integer,          intent(in), optional :: pack
 
+#ifndef use_PIO
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
          return
@@ -218,6 +223,10 @@
       end if
 
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_meta_var
 
 !versions of above to support <rval> and <ival> as scalar (because of f90 strict rank matching)
@@ -247,7 +256,7 @@
       type(axistype), dimension(:), intent(in) :: axes
 
       integer :: naxis
-
+#ifndef use_PIO
       naxis = size (axes)
       allocate (mpp_file(unit)%axis(naxis))
       mpp_file(unit)%axis(1:naxis) = axes(1:naxis)
@@ -260,6 +269,10 @@
          endif
       endif
 #endif
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_axis_data
 
     subroutine mpp_def_dim_nodata(unit,name,size)
@@ -268,11 +281,16 @@
       integer, intent(in) :: size
       integer :: error,did
 
+#ifndef use_PIO
     ! This routine assumes the file is in define mode
       if(.NOT. mpp_file(unit)%write_on_this_pe) return
 #ifdef use_netCDF
       error = NF_DEF_DIM(mpp_file(unit)%ncid,name,size,did)
       call netcdf_err(error, mpp_file(unit),string='Axis='//trim(name))
+#endif
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
 #endif
     end subroutine mpp_def_dim_nodata
 
@@ -284,6 +302,7 @@
       integer, intent(in) :: data(:)
       integer :: error,did,id
 
+#ifndef use_PIO
     ! This routine assumes the file is in define mode
 #ifdef use_netCDF
       if(.NOT. mpp_file(unit)%write_on_this_pe) return
@@ -309,6 +328,10 @@
       call netcdf_err( error, mpp_file(unit), string=' axis varable '//trim(name))
       error = NF_REDEF(mpp_file(unit)%ncid)
       call netcdf_err( error, mpp_file(unit), string=' subroutine mpp_def_dim')
+#endif
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
 #endif
     return
   end subroutine mpp_def_dim_int
@@ -322,6 +345,7 @@
       integer :: error,did,id
 
     ! This routine assumes the file is in define mode
+#ifndef use_PIO
 #ifdef use_netCDF
       if(.NOT. mpp_file(unit)%write_on_this_pe) return
       error = NF_DEF_DIM(mpp_file(unit)%ncid,name,dsize,did)
@@ -346,6 +370,10 @@
       call netcdf_err( error, mpp_file(unit), string=' axis varable '//trim(name))
       error = NF_REDEF(mpp_file(unit)%ncid)
       call netcdf_err( error, mpp_file(unit), string=' subroutine mpp_def_dim')
+#endif
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
 #endif
     return
   end subroutine mpp_def_dim_real
@@ -372,6 +400,7 @@
       logical :: domain_exist
       type(domain2d), pointer :: io_domain => NULL()
 
+#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       !--- the shift and cartesian information is needed in mpp_write_meta_field from all the pe.
       !--- we may revise this in the future.
@@ -534,6 +563,10 @@
       mpp_file(unit)%ndim = max(1,mpp_file(unit)%ndim + 1)
 
 !      call mpp_clock_end(mpp_write_clock)
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
       return
     end subroutine mpp_write_meta_axis_r1d
 
@@ -553,6 +586,7 @@
       logical :: domain_exist
       type(domain2d), pointer :: io_domain => NULL()
 
+#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META_I1D: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
@@ -606,6 +640,10 @@
 
 !      call mpp_clock_end(mpp_write_clock)
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_meta_axis_i1d
 
 
@@ -625,6 +663,7 @@
       logical :: domain_exist
       type(domain2d), pointer :: io_domain => NULL()
 
+#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META_I1D: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
@@ -670,6 +709,10 @@
 
 !      call mpp_clock_end(mpp_write_clock)
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_meta_axis_unlimited
 
 
@@ -692,6 +735,7 @@
       character(len=64) :: checksum_char
 
 !      call mpp_clock_begin(mpp_write_clock)
+#ifndef use_PIO
 
       !--- figure out the location of data, this is needed in mpp_write.
       !--- for NON-symmetry domain, the position is not an issue.
@@ -896,6 +940,10 @@
 
 !      call mpp_clock_end(mpp_write_clock)
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_meta_field
 
     subroutine write_attribute( unit, name, rval, ival, cval, pack )
@@ -907,6 +955,7 @@
       character(len=*), intent(in), optional :: cval
 !pack is currently ignored in this routine: only used by netCDF I/O
       integer, intent(in), optional :: pack
+#ifndef use_PIO
 
       if( mpp_file(unit)%nohdrs )return
 !encode text string
@@ -932,6 +981,10 @@
           end if
       end if
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine write_attribute
 
     subroutine write_attribute_netcdf( unit, id, name, rval, ival, cval, pack )
@@ -944,6 +997,7 @@
       character(len=*), intent(in), optional :: cval
       integer, intent(in), optional :: pack
       integer, allocatable :: rval_i(:)
+#ifndef use_PIO
 #ifdef use_netCDF
       if( PRESENT(rval) )then
 !pack was only meaningful for FP numbers, but is now extended by the ival branch of this routine
@@ -1034,6 +1088,10 @@
       end if
 #endif /* use_netCDF */
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine write_attribute_netcdf
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1183,6 +1241,7 @@
       type(axistype), intent(in) :: axis
       type(fieldtype) :: field
 
+#ifndef use_PIO
       call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_WRITE: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe ) then
@@ -1220,6 +1279,10 @@
 
       call mpp_clock_end(mpp_write_clock)
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_write_axis
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1237,6 +1300,7 @@
       type(atttype), intent(in) :: gatt
       integer :: len, error
 
+#ifndef use_PIO
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe )return
       if( .NOT.mpp_file(unit)%opened )call mpp_error( FATAL, 'MPP_WRITE_META: invalid unit number.' )
@@ -1268,6 +1332,10 @@
      call mpp_error( FATAL, 'MPP_READ currently requires use_netCDF option' )
 #endif
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_copy_meta_global
 
     subroutine mpp_copy_meta_axis( unit, axis, domain )
@@ -1281,6 +1349,7 @@
       character(len=512) :: text
       integer :: i, len, is, ie, isg, ieg, error
 
+#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe ) then
@@ -1375,6 +1444,10 @@
 #endif
 !      call mpp_clock_end(mpp_write_clock)
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_copy_meta_axis
 
     subroutine mpp_copy_meta_field( unit, field, axes )
@@ -1388,6 +1461,7 @@
       real :: a, b
       integer :: i, error
 
+#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe ) then
@@ -1516,6 +1590,10 @@
 
 !      call mpp_clock_end(mpp_write_clock)
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_copy_meta_field
 
     subroutine mpp_modify_axis_meta( axis, name, units, longname, cartesian, data )
@@ -1524,6 +1602,7 @@
       character(len=*), intent(in), optional :: name, units, longname, cartesian
       real, dimension(:), intent(in), optional :: data
 
+#ifndef use_PIO
       if (PRESENT(name)) axis%name = trim(name)
       if (PRESENT(units)) axis%units = trim(units)
       if (PRESENT(longname)) axis%longname = trim(longname)
@@ -1536,6 +1615,10 @@
       endif
 
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_modify_axis_meta
 
     subroutine mpp_modify_field_meta( field, name, units, longname, min, max, missing, axes )
@@ -1545,6 +1628,7 @@
       real, intent(in), optional :: min, max, missing
       type(axistype), dimension(:), intent(inout), optional :: axes
 
+#ifndef use_PIO
       if (PRESENT(name)) field%name = trim(name)
       if (PRESENT(units)) field%units = trim(units)
       if (PRESENT(longname)) field%longname = trim(longname)
@@ -1559,4 +1643,8 @@
 !      endif
 
       return
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
     end subroutine mpp_modify_field_meta
