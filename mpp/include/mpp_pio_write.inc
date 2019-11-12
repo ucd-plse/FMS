@@ -987,112 +987,97 @@
 #endif
     end subroutine write_attribute
 
-    subroutine write_attribute_netcdf( unit, id, name, rval, ival, cval, pack )
-!called to write metadata for netCDF I/O
-      integer, intent(in) :: unit
-      integer, intent(in) :: id
-      character(len=*), intent(in) :: name
-      real,             intent(in), optional :: rval(:)
-      integer,          intent(in), optional :: ival(:)
-      character(len=*), intent(in), optional :: cval
-      integer, intent(in), optional :: pack
-      integer, allocatable :: rval_i(:)
-#ifndef use_PIO
-#ifdef use_netCDF
-      if( PRESENT(rval) )then
-!pack was only meaningful for FP numbers, but is now extended by the ival branch of this routine
-          if( PRESENT(pack) )then
-             if( pack== 0 ) then !! here be dragons, use ival branch!...
-                if( KIND(rval).EQ.DOUBLE_KIND )then
-                   call mpp_error( FATAL, &
-                        'WRITE_ATTRIBUTE_NETCDF: attempting to write internal NF_INT, currently int32, as double.' )
-                   error = NF_PUT_ATT_DOUBLE( mpp_file(unit)%ncid, id, name, NF_DOUBLE, size(rval(:)), rval )
-                else if( KIND(rval).EQ.FLOAT_KIND )then
-                   call mpp_error( FATAL, &
-                        'WRITE_ATTRIBUTE_NETCDF: attempting to write internal NF_INT, currently int32, as float.' )
-                   error = NF_PUT_ATT_REAL  ( mpp_file(unit)%ncid, id, name, NF_DOUBLE, size(rval(:)), rval )
-                end if
-                call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-             else if( pack.EQ.1 )then
-                  if( KIND(rval).EQ.DOUBLE_KIND )then
-                      error = NF_PUT_ATT_DOUBLE( mpp_file(unit)%ncid, id, name, NF_DOUBLE, size(rval(:)), rval )
-                  else if( KIND(rval).EQ.FLOAT_KIND )then
-                      call mpp_error( WARNING, &
-                           'WRITE_ATTRIBUTE_NETCDF: attempting to write internal 32-bit real as external 64-bit.' )
-                      error = NF_PUT_ATT_REAL  ( mpp_file(unit)%ncid, id, name, NF_DOUBLE, size(rval(:)), rval )
-                  end if
-                  call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-              else if( pack.EQ.2 )then
-                  if( KIND(rval).EQ.DOUBLE_KIND )then
-                      error = NF_PUT_ATT_DOUBLE( mpp_file(unit)%ncid, id, name, NF_FLOAT,  size(rval(:)), rval )
-                  else if( KIND(rval).EQ.FLOAT_KIND )then
-                      error = NF_PUT_ATT_REAL  ( mpp_file(unit)%ncid, id, name, NF_FLOAT,  size(rval(:)), rval )
-                  end if
-                  call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-              else if( pack.EQ.4 )then
-                  allocate( rval_i(size(rval(:))) )
-                  rval_i = rval
-                  if( KIND(rval).EQ.DOUBLE_KIND )then
-                      error = NF_PUT_ATT_DOUBLE( mpp_file(unit)%ncid, id, name, NF_SHORT,  size(rval_i(:)), rval )
-                  else if( KIND(rval).EQ.FLOAT_KIND )then
-                      error = NF_PUT_ATT_REAL  ( mpp_file(unit)%ncid, id, name, NF_SHORT,  size(rval_i(:)), rval )
-                  end if
-                  call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-                  deallocate(rval_i)
-              else if( pack.EQ.8 )then
-                  allocate( rval_i(size(rval(:))) )
-                  rval_i = rval
-                  if( KIND(rval).EQ.DOUBLE_KIND )then
-                      error = NF_PUT_ATT_DOUBLE( mpp_file(unit)%ncid, id, name, NF_BYTE,   size(rval_i(:)), rval )
-                  else if( KIND(rval).EQ.FLOAT_KIND )then
-                      error = NF_PUT_ATT_REAL  ( mpp_file(unit)%ncid, id, name, NF_BYTE,   size(rval_i(:)), rval )
-                  end if
-                  call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-                  deallocate(rval_i)
-              else
-                  call mpp_error( FATAL, 'WRITE_ATTRIBUTE_NETCDF: only legal packing values are 1,2,4,8.' )
-              end if
-          else
-!default is to write FLOATs (32-bit)
-              if( KIND(rval).EQ.DOUBLE_KIND )then
-                  error = NF_PUT_ATT_DOUBLE( mpp_file(unit)%ncid, id, name, NF_FLOAT,  size(rval(:)), rval )
-              else if( KIND(rval).EQ.FLOAT_KIND )then
-                  error = NF_PUT_ATT_REAL  ( mpp_file(unit)%ncid, id, name, NF_FLOAT,  size(rval(:)), rval )
-              end if
-              call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
+  subroutine write_attribute_pio(file_desc, file_name, attr_id, attr_name, rval, ival, cval, pack)
+    type(File_desc_t),intent(inout) :: file_desc
+    character(len=*), intent(in)    :: file_name
+    type(var_desc_t), intent(in)    :: attr_id
+    character(len=*), intent(in)    :: attr_name
+    real,             intent(in), optional :: rval(:)
+    integer,          intent(in), optional :: ival(:)
+    character(len=*), intent(in), optional :: cval
+    integer,          intent(in), optional :: pack
+    ! local:
+    integer, allocatable :: rval_i(:)
+    integer :: error ! error code
+
+    ! this subroutine body is copied from mpp_io_write.inc::write_attribute_netcdf
+    ! and is modified for PIO
+
+    if( PRESENT(rval) )then ! attributes of type real
+      if( PRESENT(pack) )then
+        if( pack== 0 ) then !! here be dragons, use ival branch!...
+          call mpp_error( FATAL, &
+                  'write_attribute_pio: attempting to write internal NF_INT, currently int32, as real.' )
+        else if( pack.EQ.1 )then
+          if( KIND(rval).EQ.DOUBLE_KIND )then
+            error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+          else if( KIND(rval).EQ.FLOAT_KIND )then
+            call mpp_error( WARNING, &
+                 'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
+            error = PIO_put_att(file_desc, attr_id, attr_name, rval)
           end if
-      else if( PRESENT(ival) )then
-          if( PRESENT(pack) ) then
-             if (pack ==0) then
-                if (KIND(ival).EQ.LONG_KIND ) then
-                   call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
-                end if
-                error = NF_PUT_ATT_INT( mpp_file(unit)%ncid, id, name, NF_INT, size(ival(:)), ival ) !!XXX int32_t..
-                call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-             else
-                call mpp_error( FATAL, 'WRITE_ATTRIBUTE_NETCDF: only implimented ints when pack=0, else use reals.' )
-             endif
-          else
-          error = NF_PUT_ATT_INT ( mpp_file(unit)%ncid, id, name, NF_INT, size(ival(:)), ival )
-          call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-          end if
-      else if( present(cval) )then
-          if (.NOT.cf_compliance .or. trim(name).NE.'calendar') then
-            error = NF_PUT_ATT_TEXT( mpp_file(unit)%ncid, id, name, len_trim(cval), cval )
-          else
-            error = NF_PUT_ATT_TEXT( mpp_file(unit)%ncid, id, name, len_trim(cval), lowercase(cval) )
-          endif
-          call netcdf_err( error, mpp_file(unit), string=' Attribute='//name )
-      else
-          call mpp_error( FATAL, 'WRITE_ATTRIBUTE_NETCDF: one of rval, ival, cval must be present.' )
+          call pio_err( error, file_name=file_name, attr_name=attr_name)
+        else if( pack.EQ.2 )then
+          error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+          call pio_err( error, file_name=file_name, attr_name=attr_name)
+        else
+          call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
+        end if
+      else ! no pack provided
+        error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+        call pio_err( error, file_name=file_name, attr_name=attr_name)
       end if
-#endif /* use_netCDF */
-      return
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
-    end subroutine write_attribute_netcdf
+    else if( PRESENT(ival) )then ! attributes of type integer
+      if( PRESENT(pack) ) then
+        if (pack ==0) then
+          if (KIND(ival).EQ.LONG_KIND ) then
+             call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
+          end if
+          error = PIO_put_att(file_desc, attr_id, attr_name, ival)
+          call pio_err( error, file_name=file_name, attr_name=attr_name)
+        else
+          call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
+        endif
+      else ! no pack provided
+        error = PIO_put_att(file_desc, attr_id, attr_name, ival)
+        call pio_err( error, file_name=file_name, attr_name=attr_name)
+      end if
+    else if( present(cval) )then
+      if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
+        error = PIO_put_att(file_desc, attr_id, attr_name, cval)
+      else
+        error = PIO_put_att(file_desc, attr_id, attr_name, lowercase(cval))
+      endif
+      call pio_err( error, file_name=file_name, attr_name=attr_name)
+    else
+      call mpp_error( FATAL, 'write_attribute_pio: one of rval, ival, cval must be present.' )
+    end if
+
+  end subroutine write_attribute_pio
+
+  subroutine pio_err( err, file_name, axis_name, field_name, attr_name, string)
+    integer,          intent(in)           :: err
+    character(len=*), intent(in), optional :: file_name
+    character(len=*), intent(in), optional :: axis_name
+    character(len=*), intent(in), optional :: field_name
+    character(len=*), intent(in), optional :: attr_name
+    character(len=*),             optional :: string
+    ! local
+    character(len=256) :: errmsg
+
+    errmsg = ""
+
+    if (err/=0) then ! TODO confirm this
+      if (present(file_name))   errmsg = trim(errmsg)//' File='//file_name
+      if (present(axis_name))   errmsg = trim(errmsg)//' Axis='//axis_name
+      if (present(field_name))  errmsg = trim(errmsg)//' Field='//field_name
+      if (present(attr_name))   errmsg = trim(errmsg)//' Attribute='//attr_name
+      if (present(string))      errmsg = trim(errmsg)//string
+
+      !call mpp_io_exit('NOSYNC')        !make sure you close all open files !TODO
+      call mpp_error( FATAL, 'PIO ERROR: '//trim(errmsg) )
+    endif
+  end subroutine pio_err
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                                                                      !

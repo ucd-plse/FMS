@@ -186,7 +186,7 @@
       endif
 
 #ifdef use_PIO
-      call mpp_pio_init(do_cf_compliance())
+      call mpp_pio_init()
 #endif
 
 #ifdef CRAYPVP

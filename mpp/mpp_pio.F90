@@ -76,7 +76,6 @@ module mpp_pio_mod
 
   public :: mpp_pio_init
   public :: mpp_pio_openfile
-  public :: write_attribute_pio
 
   character(len=64)   :: pio_netcdf_format, pio_typename
   integer             :: pio_numiotasks, pio_rearranger, pio_root, pio_stride
@@ -86,19 +85,15 @@ module mpp_pio_mod
   type(iosystem_desc_t) :: pio_iosystem     ! The ParallelIO system set up by PIO_init
   integer               :: pio_iotype       ! PIO_IOTYPE_NETCDF or PNETCDF
   integer               :: pio_optbase = 1  ! Start index of I/O processors
-  logical               :: pio_cf_compliance
 
   contains
 
-  subroutine mpp_pio_init(cf_compliance)
-    logical, intent(in) :: cf_compliance
+  subroutine mpp_pio_init()
     ! local
     integer :: unit_begin, unit_end, unit_nml, io_status, unit
     logical :: opened
     integer :: pe, npes, localcomm
     integer :: numAggregator = 0 !TODO
-
-    pio_cf_compliance = cf_compliance
 
     ! read mpp_pio_nml namelist
 #ifdef INTERNAL_FILE_NML
@@ -205,98 +200,6 @@ module mpp_pio_mod
 
     mpp_pio_openfile = stat
   end function mpp_pio_openfile
-
-  subroutine write_attribute_pio(file_desc, file_name, attr_id, attr_name, rval, ival, cval, pack)
-    type(File_desc_t),intent(inout) :: file_desc
-    character(len=*), intent(in)    :: file_name
-    type(var_desc_t), intent(in)    :: attr_id
-    character(len=*), intent(in)    :: attr_name
-    real,             intent(in), optional :: rval(:)
-    integer,          intent(in), optional :: ival(:)
-    character(len=*), intent(in), optional :: cval
-    integer,          intent(in), optional :: pack
-    ! local:
-    integer, allocatable :: rval_i(:)
-    integer :: error ! error code
-
-    ! this subroutine body is copied from mpp_io_write.inc::write_attribute_netcdf
-    ! and is modified for PIO
-
-    if( PRESENT(rval) )then ! attributes of type real
-      if( PRESENT(pack) )then
-        if( pack== 0 ) then !! here be dragons, use ival branch!...
-          call mpp_error( FATAL, &
-                  'write_attribute_pio: attempting to write internal NF_INT, currently int32, as real.' )
-        else if( pack.EQ.1 )then
-          if( KIND(rval).EQ.DOUBLE_KIND )then
-            error = PIO_put_att(file_desc, attr_id, attr_name, rval)
-          else if( KIND(rval).EQ.FLOAT_KIND )then
-            call mpp_error( WARNING, &
-                 'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
-            error = PIO_put_att(file_desc, attr_id, attr_name, rval)
-          end if
-          call pio_err( error, file_name=file_name, attr_name=attr_name)
-        else if( pack.EQ.2 )then
-          error = PIO_put_att(file_desc, attr_id, attr_name, rval)
-          call pio_err( error, file_name=file_name, attr_name=attr_name)
-        else
-          call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
-        end if
-      else ! no pack provided
-        error = PIO_put_att(file_desc, attr_id, attr_name, rval)
-        call pio_err( error, file_name=file_name, attr_name=attr_name)
-      end if
-    else if( PRESENT(ival) )then ! attributes of type integer
-      if( PRESENT(pack) ) then
-        if (pack ==0) then
-          if (KIND(ival).EQ.LONG_KIND ) then
-             call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
-          end if
-          error = PIO_put_att(file_desc, attr_id, attr_name, ival)
-          call pio_err( error, file_name=file_name, attr_name=attr_name)
-        else
-          call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
-        endif
-      else ! no pack provided
-        error = PIO_put_att(file_desc, attr_id, attr_name, ival)
-        call pio_err( error, file_name=file_name, attr_name=attr_name)
-      end if
-    else if( present(cval) )then
-      if (.NOT.pio_cf_compliance .or. trim(attr_name).NE.'calendar') then
-        error = PIO_put_att(file_desc, attr_id, attr_name, cval)
-      else
-        error = PIO_put_att(file_desc, attr_id, attr_name, lowercase(cval))
-      endif
-      call pio_err( error, file_name=file_name, attr_name=attr_name)
-    else
-      call mpp_error( FATAL, 'write_attribute_pio: one of rval, ival, cval must be present.' )
-    end if
-
-  end subroutine write_attribute_pio
-
-  subroutine pio_err( err, file_name, axis_name, field_name, attr_name, string)
-    integer,          intent(in)           :: err
-    character(len=*), intent(in), optional :: file_name
-    character(len=*), intent(in), optional :: axis_name
-    character(len=*), intent(in), optional :: field_name
-    character(len=*), intent(in), optional :: attr_name
-    character(len=*),             optional :: string
-    ! local
-    character(len=256) :: errmsg
-
-    errmsg = ""
-
-    if (err/=0) then ! TODO confirm this
-      if (present(file_name))   errmsg = trim(errmsg)//' File='//file_name
-      if (present(axis_name))   errmsg = trim(errmsg)//' Axis='//axis_name
-      if (present(field_name))  errmsg = trim(errmsg)//' Field='//field_name
-      if (present(attr_name))   errmsg = trim(errmsg)//' Attribute='//attr_name
-      if (present(string))      errmsg = trim(errmsg)//string
-
-      !call mpp_io_exit('NOSYNC')        !make sure you close all open files !TODO
-      call mpp_error( FATAL, 'PIO ERROR: '//trim(errmsg) )
-    endif
-  end subroutine pio_err
 
 #endif
 end module mpp_pio_mod
