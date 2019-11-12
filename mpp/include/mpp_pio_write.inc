@@ -145,7 +145,6 @@
       integer,          intent(in), optional :: ival(:)
       character(len=*), intent(in), optional :: cval
       integer, intent(in), optional :: pack
-#ifndef use_PIO
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
@@ -156,20 +155,10 @@
       if( mpp_file(unit)%initialized ) &
            call mpp_error( FATAL, 'MPP_WRITE_META: cannot write metadata to file after an mpp_write.' )
 
-      if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
-#ifdef use_netCDF
-          call write_attribute_netcdf( unit, NF_GLOBAL, name, rval, ival, cval, pack )
-#endif
-      else
-          call write_attribute( unit, 'GLOBAL '//trim(name), rval, ival, cval, pack )
-      end if
+      call write_attribute_pio_global(unit, name, rval, ival, cval, pack )
 !      call mpp_clock_end(mpp_write_clock)
 
       return
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
     end subroutine mpp_write_meta_global
 
 !versions of above to support <rval> and <ival> as scalars (because of f90 strict rank matching)
@@ -987,9 +976,8 @@
 #endif
     end subroutine write_attribute
 
-  subroutine write_attribute_pio(file_desc, file_name, attr_id, attr_name, rval, ival, cval, pack)
-    type(File_desc_t),intent(inout) :: file_desc
-    character(len=*), intent(in)    :: file_name
+  subroutine write_attribute_pio(unit, attr_id, attr_name, rval, ival, cval, pack)
+    integer, intent(in)             :: unit
     type(var_desc_t), intent(in)    :: attr_id
     character(len=*), intent(in)    :: attr_name
     real,             intent(in), optional :: rval(:)
@@ -997,11 +985,16 @@
     character(len=*), intent(in), optional :: cval
     integer,          intent(in), optional :: pack
     ! local:
-    integer, allocatable :: rval_i(:)
-    integer :: error ! error code
+    type(File_desc_t)     :: file_desc
+    character(len=256)    :: file_name
+    integer, allocatable  :: rval_i(:)
+    integer               :: error ! error code
 
     ! this subroutine body is copied from mpp_io_write.inc::write_attribute_netcdf
     ! and is modified for PIO
+
+    file_desc = mpp_file(unit)%fileDesc
+    file_name = mpp_file(unit)%name
 
     if( PRESENT(rval) )then ! attributes of type real
       if( PRESENT(pack) )then
@@ -1016,16 +1009,16 @@
                  'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
             error = PIO_put_att(file_desc, attr_id, attr_name, rval)
           end if
-          call pio_err( error, file_name=file_name, attr_name=attr_name)
+          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else if( pack.EQ.2 )then
           error = PIO_put_att(file_desc, attr_id, attr_name, rval)
-          call pio_err( error, file_name=file_name, attr_name=attr_name)
+          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
         end if
       else ! no pack provided
         error = PIO_put_att(file_desc, attr_id, attr_name, rval)
-        call pio_err( error, file_name=file_name, attr_name=attr_name)
+        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
       end if
     else if( PRESENT(ival) )then ! attributes of type integer
       if( PRESENT(pack) ) then
@@ -1034,13 +1027,13 @@
              call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
           end if
           error = PIO_put_att(file_desc, attr_id, attr_name, ival)
-          call pio_err( error, file_name=file_name, attr_name=attr_name)
+          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
         endif
       else ! no pack provided
         error = PIO_put_att(file_desc, attr_id, attr_name, ival)
-        call pio_err( error, file_name=file_name, attr_name=attr_name)
+        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
       end if
     else if( present(cval) )then
       if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
@@ -1048,12 +1041,83 @@
       else
         error = PIO_put_att(file_desc, attr_id, attr_name, lowercase(cval))
       endif
-      call pio_err( error, file_name=file_name, attr_name=attr_name)
+      call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
     else
       call mpp_error( FATAL, 'write_attribute_pio: one of rval, ival, cval must be present.' )
     end if
 
   end subroutine write_attribute_pio
+
+  subroutine write_attribute_pio_global(unit, attr_name, rval, ival, cval, pack)
+    integer, intent(in)             :: unit
+    character(len=*), intent(in)    :: attr_name
+    real,             intent(in), optional :: rval(:)
+    integer,          intent(in), optional :: ival(:)
+    character(len=*), intent(in), optional :: cval
+    integer,          intent(in), optional :: pack
+    ! local:
+    type(File_desc_t)     :: file_desc
+    character(len=256)    :: file_name
+    integer, allocatable  :: rval_i(:)
+    integer               :: error ! error code
+
+    ! this subroutine body is copied from mpp_io_write.inc::write_attribute_netcdf
+    ! and is modified for PIO
+
+    file_desc = mpp_file(unit)%fileDesc
+    file_name = mpp_file(unit)%name
+
+    if( PRESENT(rval) )then ! attributes of type real
+      if( PRESENT(pack) )then
+        if( pack== 0 ) then !! here be dragons, use ival branch!...
+          call mpp_error( FATAL, &
+                  'write_attribute_pio: attempting to write internal NF_INT, currently int32, as real.' )
+        else if( pack.EQ.1 )then
+          if( KIND(rval).EQ.DOUBLE_KIND )then
+            error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+          else if( KIND(rval).EQ.FLOAT_KIND )then
+            call mpp_error( WARNING, &
+                 'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
+            error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+          end if
+          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        else if( pack.EQ.2 )then
+          error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        else
+          call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
+        end if
+      else ! no pack provided
+        error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+      end if
+    else if( PRESENT(ival) )then ! attributes of type integer
+      if( PRESENT(pack) ) then
+        if (pack ==0) then
+          if (KIND(ival).EQ.LONG_KIND ) then
+             call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
+          end if
+          error = PIO_put_att(file_desc, PIO_global, attr_name, ival)
+          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        else
+          call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
+        endif
+      else ! no pack provided
+        error = PIO_put_att(file_desc, PIO_global, attr_name, ival)
+        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+      end if
+    else if( present(cval) )then
+      if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
+        error = PIO_put_att(file_desc, PIO_global, attr_name, cval)
+      else
+        error = PIO_put_att(file_desc, PIO_global, attr_name, lowercase(cval))
+      endif
+      call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+    else
+      call mpp_error( FATAL, 'write_attribute_pio: one of rval, ival, cval must be present.' )
+    end if
+
+  end subroutine write_attribute_pio_global
 
   subroutine pio_err( err, file_name, axis_name, field_name, attr_name, string)
     integer,          intent(in)           :: err
