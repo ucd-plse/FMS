@@ -195,7 +195,6 @@
       character(len=*), intent(in), optional :: cval
       integer,          intent(in), optional :: pack
 
-#ifndef use_PIO
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
          return
@@ -204,18 +203,9 @@
       if( mpp_file(unit)%initialized ) &
            call mpp_error( FATAL, 'MPP_WRITE_META: cannot write metadata to file after an mpp_write.' )
 
-      if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
-          call write_attribute_netcdf( unit, id, name, rval, ival, cval, pack )
-      else
-          write( text, '(a,i4,a)' )'VARIABLE ', id, ' '//name
-          call write_attribute( unit, trim(text), rval, ival, cval, pack )
-      end if
+      call write_attribute_pio(unit, id, name, rval, ival, cval, pack )
 
       return
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
     end subroutine mpp_write_meta_var
 
 !versions of above to support <rval> and <ival> as scalar (because of f90 strict rank matching)
@@ -719,7 +709,6 @@
       character(len=64) :: checksum_char
 
 !      call mpp_clock_begin(mpp_write_clock)
-#ifndef use_PIO
 
       !--- figure out the location of data, this is needed in mpp_write.
       !--- for NON-symmetry domain, the position is not an issue.
@@ -754,7 +743,7 @@
       if( mpp_file(unit)%initialized )  then
 !     File has already been written to and needs to be returned to define mode.
 #ifdef use_netCDF
-        error = NF_REDEF(mpp_file(unit)%ncid)
+        error = PIO_redef(mpp_file(unit)%ncid)
 #endif
         mpp_file(unit)%initialized = .false.
       endif
@@ -809,27 +798,19 @@
 !write field def
           select case (field%pack)
               case(0)
-                  error = NF_DEF_VAR( mpp_file(unit)%ncid, field%name, NF_INT, size(field%axes(:)), axis_id, field%id )
+                  error = PIO_def_var( mpp_file(unit)%ncid, field%name, PIO_INT, axis_id, field%id)
               case(1)
-                  error = NF_DEF_VAR( mpp_file(unit)%ncid, field%name, NF_DOUBLE, size(field%axes(:)), axis_id, field%id )
+                  error = PIO_def_var( mpp_file(unit)%ncid, field%name, PIO_DOUBLE, axis_id, field%id)
               case(2)
-                  error = NF_DEF_VAR( mpp_file(unit)%ncid, field%name, NF_FLOAT,  size(field%axes(:)), axis_id, field%id )
-              case(4)
-                  if( .NOT.PRESENT(scale) .OR. .NOT.PRESENT(add) ) &
-                       call mpp_error( FATAL, 'MPP_WRITE_META_FIELD: scale and add must be supplied when pack=4.' )
-                  error = NF_DEF_VAR( mpp_file(unit)%ncid, field%name, NF_SHORT,  size(field%axes(:)), axis_id, field%id )
-              case(8)
-                  if( .NOT.PRESENT(scale) .OR. .NOT.PRESENT(add) ) &
-                       call mpp_error( FATAL, 'MPP_WRITE_META_FIELD: scale and add must be supplied when pack=8.' )
-                  error = NF_DEF_VAR( mpp_file(unit)%ncid, field%name, NF_BYTE,   size(field%axes(:)), axis_id, field%id )
+                  error = PIO_def_var( mpp_file(unit)%ncid, field%name, PIO_REAL, axis_id, field%id)
               case default
-                  call mpp_error( FATAL, 'MPP_WRITE_META_FIELD: only legal packing values are 1,2,4,8.' )
+                  call mpp_error( FATAL, 'MPP_WRITE_META_FIELD: only legal packing values for PIO are 1,2.' )
           end select
           call netcdf_err( error, mpp_file(unit), field=field )
           deallocate(axis_id)
 #ifndef use_netCDF3
           if(shuffle .NE. 0 .OR. deflate .NE. 0) then
-             error = NF_DEF_VAR_DEFLATE(mpp_file(unit)%ncid, field%id, shuffle, deflate, deflate_level)
+             error = PIO_def_var_deflate( mpp_file(unit)%fileDesc, field%id, shuffle, deflate, deflate_level)
              call netcdf_err( error, mpp_file(unit), field=field )
           endif
 #endif
@@ -924,10 +905,6 @@
 
 !      call mpp_clock_end(mpp_write_clock)
       return
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
     end subroutine mpp_write_meta_field
 
     subroutine write_attribute( unit, name, rval, ival, cval, pack )

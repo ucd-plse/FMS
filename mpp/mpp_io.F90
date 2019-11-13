@@ -366,8 +366,8 @@ use mpp_domains_mod, only: domainUG, &
 
 #ifdef use_PIO
 use pio,          only : File_desc_t, PIO_GLOBAL, PIO_UNLIMITED
-use pio,          only : PIO_put_att, PIO_def_dim, PIO_def_var
-use pio,          only : PIO_DOUBLE, PIO_REAL
+use pio,          only : PIO_put_att, PIO_def_dim, PIO_def_var, PIO_def_var_deflate, PIO_redef
+use pio,          only : PIO_DOUBLE, PIO_REAL, PIO_INT
 use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_openfile
 #endif
 
@@ -477,11 +477,10 @@ type :: atttype
   type :: filetype
      private
      character(len=256) :: name
-     integer            :: action, format, access, threading, fileset, record
+     integer            :: action, format, access, threading, fileset, record, ncid
 #ifdef use_PIO
      type (File_desc_t) :: fileDesc
 #endif
-     integer            :: ncid
      logical            :: opened, initialized, nohdrs
      integer            :: time_level
      real(DOUBLE_KIND)  :: time
