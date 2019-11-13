@@ -459,23 +459,23 @@
 !write axis def
 !space axes are always floats, time axis is always double
           if( ASSOCIATED(axis%data) )then !space axis
-              error = PIO_def_dim( mpp_file(unit)%fileDesc, axis%name, axis%len, axis%did)
+              error = PIO_def_dim( mpp_file(unit)%ncid, axis%name, axis%len, axis%did)
               call netcdf_err( error, mpp_file(unit), axis )
               if(pack_size == 1) then
-                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_DOUBLE, (/axis%did/), axis%id)
+                 error = PIO_def_var( mpp_file(unit)%ncid, axis%name, PIO_DOUBLE, (/axis%did/), axis%id)
               else ! pack_size == 2
-                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_REAL, (/axis%did/), axis%id)
+                 error = PIO_def_var( mpp_file(unit)%ncid, axis%name, PIO_REAL, (/axis%did/), axis%id)
               endif
               call netcdf_err( error, mpp_file(unit), axis )
           else                            !time axis
               if( mpp_file(unit)%id.NE.-1 ) &
                    call mpp_error( FATAL, 'MPP_WRITE_META_AXIS: There is already a time axis for this file.' )
-              error = PIO_def_dim( mpp_file(unit)%fileDesc%fh, axis%name, PIO_UNLIMITED, axis%did)
+              error = PIO_def_dim( mpp_file(unit)%ncid, axis%name, PIO_UNLIMITED, axis%did)
               call netcdf_err( error, mpp_file(unit), axis )
               if(pack_size == 1) then
-                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_DOUBLE, (/axis%did/), axis%id)
+                 error = PIO_def_var( mpp_file(unit)%ncid, axis%name, PIO_DOUBLE, (/axis%did/), axis%id)
               else ! pack_size == 2
-                 error = PIO_def_var( mpp_file(unit)%fileDesc%fh, axis%name, PIO_REAL, (/axis%did/), axis%id)
+                 error = PIO_def_var( mpp_file(unit)%ncid, axis%name, PIO_REAL, (/axis%did/), axis%id)
               endif
               call netcdf_err( error, mpp_file(unit), axis )
               mpp_file(unit)%id = axis%id !file ID is the same as time axis varID
@@ -980,7 +980,6 @@
     character(len=*), intent(in), optional :: cval
     integer,          intent(in), optional :: pack
     ! local:
-    type(File_desc_t)     :: file_desc
     character(len=256)    :: file_name
     integer, allocatable  :: rval_i(:)
     integer               :: error ! error code
@@ -988,7 +987,6 @@
     ! this subroutine body is copied from mpp_io_write.inc::write_attribute_netcdf
     ! and is modified for PIO
 
-    file_desc = mpp_file(unit)%fileDesc
     file_name = mpp_file(unit)%name
 
     if( PRESENT(rval) )then ! attributes of type real
@@ -998,21 +996,21 @@
                   'write_attribute_pio: attempting to write internal NF_INT, currently int32, as real.' )
         else if( pack.EQ.1 )then
           if( KIND(rval).EQ.DOUBLE_KIND )then
-            error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+            error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
           else if( KIND(rval).EQ.FLOAT_KIND )then
             call mpp_error( WARNING, &
                  'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
-            error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+            error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
           end if
           call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else if( pack.EQ.2 )then
-          error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+          error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
           call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
         end if
       else ! no pack provided
-        error = PIO_put_att(file_desc, attr_id, attr_name, rval)
+        error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
         call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
       end if
     else if( PRESENT(ival) )then ! attributes of type integer
@@ -1021,20 +1019,20 @@
           if (KIND(ival).EQ.LONG_KIND ) then
              call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
           end if
-          error = PIO_put_att(file_desc, attr_id, attr_name, ival)
+          error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, ival)
           call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
         endif
       else ! no pack provided
-        error = PIO_put_att(file_desc, attr_id, attr_name, ival)
+        error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, ival)
         call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
       end if
     else if( present(cval) )then
       if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
-        error = PIO_put_att(file_desc, attr_id, attr_name, cval)
+        error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, cval)
       else
-        error = PIO_put_att(file_desc, attr_id, attr_name, lowercase(cval))
+        error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, lowercase(cval))
       endif
       call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
     else
@@ -1051,7 +1049,6 @@
     character(len=*), intent(in), optional :: cval
     integer,          intent(in), optional :: pack
     ! local:
-    type(File_desc_t)     :: file_desc
     character(len=256)    :: file_name
     integer, allocatable  :: rval_i(:)
     integer               :: error ! error code
@@ -1059,7 +1056,6 @@
     ! this subroutine body is copied from mpp_io_write.inc::write_attribute_netcdf
     ! and is modified for PIO
 
-    file_desc = mpp_file(unit)%fileDesc
     file_name = mpp_file(unit)%name
 
     if( PRESENT(rval) )then ! attributes of type real
@@ -1069,21 +1065,21 @@
                   'write_attribute_pio: attempting to write internal NF_INT, currently int32, as real.' )
         else if( pack.EQ.1 )then
           if( KIND(rval).EQ.DOUBLE_KIND )then
-            error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+            error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
           else if( KIND(rval).EQ.FLOAT_KIND )then
             call mpp_error( WARNING, &
                  'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
-            error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+            error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
           end if
           call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else if( pack.EQ.2 )then
-          error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+          error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
           call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
         end if
       else ! no pack provided
-        error = PIO_put_att(file_desc, PIO_global, attr_name, rval)
+        error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
         call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
       end if
     else if( PRESENT(ival) )then ! attributes of type integer
@@ -1092,20 +1088,20 @@
           if (KIND(ival).EQ.LONG_KIND ) then
              call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
           end if
-          error = PIO_put_att(file_desc, PIO_global, attr_name, ival)
+          error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, ival)
           call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
         endif
       else ! no pack provided
-        error = PIO_put_att(file_desc, PIO_global, attr_name, ival)
+        error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, ival)
         call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
       end if
     else if( present(cval) )then
       if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
-        error = PIO_put_att(file_desc, PIO_global, attr_name, cval)
+        error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, cval)
       else
-        error = PIO_put_att(file_desc, PIO_global, attr_name, lowercase(cval))
+        error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, lowercase(cval))
       endif
       call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
     else

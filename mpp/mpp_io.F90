@@ -401,9 +401,7 @@ private
   public :: mpp_get_file_name, mpp_file_is_opened, mpp_attribute_exist
   public :: mpp_io_clock_on, mpp_get_time_axis, mpp_get_default_calendar
   public :: mpp_get_dimension_length, mpp_get_axis_bounds
-#ifndef use_PIO
   public :: mpp_get_ncid
-#endif
 
   !--- public interface from mpp_io_misc.h ----------------------
   public :: mpp_io_init, mpp_io_exit, netcdf_err, mpp_flush, mpp_get_maxunits, do_cf_compliance
@@ -482,9 +480,8 @@ type :: atttype
      integer            :: action, format, access, threading, fileset, record
 #ifdef use_PIO
      type (File_desc_t) :: fileDesc
-#else
-     integer            :: ncid
 #endif
+     integer            :: ncid
      logical            :: opened, initialized, nohdrs
      integer            :: time_level
      real(DOUBLE_KIND)  :: time

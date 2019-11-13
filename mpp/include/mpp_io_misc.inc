@@ -152,9 +152,7 @@
       mpp_file(:)%threading = -1
       mpp_file(:)%fileset   = -1
       mpp_file(:)%record    = -1
-#ifndef use_PIO
       mpp_file(:)%ncid      = -1
-#endif
       mpp_file(:)%opened = .FALSE.
       mpp_file(:)%initialized = .FALSE.
       mpp_file(:)%write_on_this_pe = .FALSE.
@@ -204,7 +202,6 @@
       endif
       module_is_initialized = .TRUE.
       return
-
     end subroutine mpp_io_init
 
 

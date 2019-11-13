@@ -657,6 +657,7 @@
               !mpp_file(unit)%format=form_flag ! need this for mpp_read
               !call mpp_read_meta(unit, read_time=.TRUE.)
           end if
+          mpp_file(unit)%ncid = mpp_file(unit)%fileDesc%fh
           mpp_file(unit)%opened = .TRUE.
 #elif use_netCDF3
           if( action_flag.EQ.MPP_WRONLY )then
@@ -1012,9 +1013,7 @@
       mpp_file(unit)%threading = -1
       mpp_file(unit)%fileset   = -1
       mpp_file(unit)%record    = -1
-#ifndef use_PIO
       mpp_file(unit)%ncid      = -1
-#endif
       mpp_file(unit)%opened = .FALSE.
       mpp_file(unit)%initialized = .FALSE.
       mpp_file(unit)%id = -1
