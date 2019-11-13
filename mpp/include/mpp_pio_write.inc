@@ -1234,7 +1234,6 @@
       type(axistype), intent(in) :: axis
       type(fieldtype) :: field
 
-#ifndef use_PIO
       call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_WRITE: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe ) then
@@ -1272,10 +1271,6 @@
 
       call mpp_clock_end(mpp_write_clock)
       return
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
     end subroutine mpp_write_axis
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
