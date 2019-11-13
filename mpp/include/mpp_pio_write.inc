@@ -979,16 +979,16 @@
                  'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
             error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
           end if
-          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+          call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
         else if( pack.EQ.2 )then
           error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
-          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+          call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
         end if
       else ! no pack provided
         error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, rval)
-        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
       end if
     else if( PRESENT(ival) )then ! attributes of type integer
       if( PRESENT(pack) ) then
@@ -997,13 +997,13 @@
              call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
           end if
           error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, ival)
-          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+          call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
         endif
       else ! no pack provided
         error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, ival)
-        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
       end if
     else if( present(cval) )then
       if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
@@ -1011,7 +1011,7 @@
       else
         error = PIO_put_att(mpp_file(unit)%ncid, attr_id, attr_name, lowercase(cval))
       endif
-      call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+      call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
     else
       call mpp_error( FATAL, 'write_attribute_pio: one of rval, ival, cval must be present.' )
     end if
@@ -1048,16 +1048,16 @@
                  'write_attribute_pio: attempting to write internal 32-bit real as external 64-bit.' )
             error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
           end if
-          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+          call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
         else if( pack.EQ.2 )then
           error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
-          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+          call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only legal packing values are 1,2.' )
         end if
       else ! no pack provided
         error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, rval)
-        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
       end if
     else if( PRESENT(ival) )then ! attributes of type integer
       if( PRESENT(pack) ) then
@@ -1066,13 +1066,13 @@
              call mpp_error(FATAL,'only use NF_INTs with pack=0 for now')
           end if
           error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, ival)
-          call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+          call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
         else
           call mpp_error( FATAL, 'write_attribute_pio: only implimented ints when pack=0, else use reals.' )
         endif
       else ! no pack provided
         error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, ival)
-        call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+        call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
       end if
     else if( present(cval) )then
       if (.NOT.cf_compliance .or. trim(attr_name).NE.'calendar') then
@@ -1080,36 +1080,12 @@
       else
         error = PIO_put_att(mpp_file(unit)%ncid, PIO_global, attr_name, lowercase(cval))
       endif
-      call pio_err( error, file_name=trim(file_name), attr_name=attr_name)
+      call netcdf_err( error, file=mpp_file(unit), string=' Attribute='//attr_name)
     else
       call mpp_error( FATAL, 'write_attribute_pio: one of rval, ival, cval must be present.' )
     end if
 
   end subroutine write_attribute_pio_global
-
-  subroutine pio_err( err, file_name, axis_name, field_name, attr_name, string)
-    integer,          intent(in)           :: err
-    character(len=*), intent(in), optional :: file_name
-    character(len=*), intent(in), optional :: axis_name
-    character(len=*), intent(in), optional :: field_name
-    character(len=*), intent(in), optional :: attr_name
-    character(len=*),             optional :: string
-    ! local
-    character(len=256) :: errmsg
-
-    errmsg = ""
-
-    if (err/=0) then ! TODO confirm this
-      if (present(file_name))   errmsg = trim(errmsg)//' File='//file_name
-      if (present(axis_name))   errmsg = trim(errmsg)//' Axis='//axis_name
-      if (present(field_name))  errmsg = trim(errmsg)//' Field='//field_name
-      if (present(attr_name))   errmsg = trim(errmsg)//' Attribute='//attr_name
-      if (present(string))      errmsg = trim(errmsg)//string
-
-      !call mpp_io_exit('NOSYNC')        !make sure you close all open files !TODO
-      call mpp_error( FATAL, 'PIO ERROR: '//trim(errmsg) )
-    endif
-  end subroutine pio_err
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                                                                      !
