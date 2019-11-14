@@ -317,6 +317,7 @@
               endif
               deallocate(gdata)
           end if
+#ifndef use_PIO
       else if(mpp_file(unit)%io_domain_exist ) then
           if( halos_are_global )then
               call mpp_update_domains( data, domain, position = position )
@@ -353,6 +354,10 @@
       else
 !data is already contiguous
           call WRITE_RECORD_( unit, field, size(data(:,:,:)), data, tstamp, domain, tile_count )
+#else
+      else
+          call mpp_error( FATAL, 'Must have multiple PEs and no IO domains when running with PIO' )
+#endif
       end if
 
       call mpp_clock_end(mpp_write_clock)
