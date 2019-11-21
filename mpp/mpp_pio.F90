@@ -315,10 +315,10 @@ module mpp_pio_mod
       nmode = pio_write
     else if (action_flag == MPP_OVERWR) then
       if (.not. file_exists) then
-        print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-        call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+        nmode = pio_write
+      else
+        nmode = pio_clobber
       endif
-      nmode = pio_clobber
     else if (action_flag == MPP_RDONLY) then
       nmode = pio_nowrite
     else
