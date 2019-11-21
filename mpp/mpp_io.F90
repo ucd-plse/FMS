@@ -365,12 +365,12 @@ use mpp_domains_mod, only: domainUG, &
 !----------
 
 #ifdef use_PIO
-use pio,          only : File_desc_t, PIO_GLOBAL, PIO_UNLIMITED
+use pio,          only : File_desc_t, IO_desc_t, PIO_GLOBAL, PIO_UNLIMITED
 use pio,          only : PIO_put_att, PIO_def_dim, PIO_def_var, PIO_put_var
 use pio,          only : PIO_enddef, PIO_redef, PIO_def_var_deflate
 use pio,          only : PIO_DOUBLE, PIO_REAL, PIO_INT
 use pio,          only : PIO_closefile
-use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_decomp_init, mpp_pio_openfile
+use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_stage_ioDesc, mpp_pio_openfile
 #endif
 
 implicit none
@@ -474,15 +474,15 @@ type :: atttype
      integer                 :: id, type, natt, ndim
      type(atttype), pointer  :: Att(:) =>NULL()
      integer                 :: position ! indicate the location of the data ( CENTER, NORTH, EAST, CORNER )
+#ifdef use_PIO
+     type(IO_desc_t), pointer:: ioDesc =>NULL()
+#endif
   end type fieldtype
 
   type :: filetype
      private
      character(len=256) :: name
      integer            :: action, format, access, threading, fileset, record, ncid
-#ifdef use_PIO
-     type (File_desc_t) :: fileDesc
-#endif
      logical            :: opened, initialized, nohdrs
      integer            :: time_level
      real(DOUBLE_KIND)  :: time
@@ -507,6 +507,9 @@ type :: atttype
 !ug support
      type(domainUG),pointer :: domain_ug => null() !Is this actually pointed to?
 !----------
+#ifdef use_PIO
+     type (File_desc_t) :: fileDesc
+#endif
   end type filetype
 
 !***********************************************************************
