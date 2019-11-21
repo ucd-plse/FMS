@@ -145,6 +145,7 @@
       integer,          intent(in), optional :: ival(:)
       character(len=*), intent(in), optional :: cval
       integer, intent(in), optional :: pack
+
 !      call mpp_clock_begin(mpp_write_clock)
       if( .NOT.module_is_initialized    )call mpp_error( FATAL, 'MPP_WRITE_META: must first call mpp_io_init.' )
       if( .NOT. mpp_file(unit)%write_on_this_pe) then
@@ -155,7 +156,13 @@
       if( mpp_file(unit)%initialized ) &
            call mpp_error( FATAL, 'MPP_WRITE_META: cannot write metadata to file after an mpp_write.' )
 
-      call write_attribute_pio_global(unit, name, rval, ival, cval, pack )
+      if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
+#ifdef use_netCDF
+          call write_attribute_pio_global(unit, name, rval, ival, cval, pack )
+#endif
+      else
+          call write_attribute( unit, 'GLOBAL '//trim(name), rval, ival, cval, pack )
+      end if
 !      call mpp_clock_end(mpp_write_clock)
 
       return
@@ -203,7 +210,12 @@
       if( mpp_file(unit)%initialized ) &
            call mpp_error( FATAL, 'MPP_WRITE_META: cannot write metadata to file after an mpp_write.' )
 
-      call write_attribute_pio(unit, id, name, rval, ival, cval, pack )
+      if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
+          call write_attribute_pio(unit, id, name, rval, ival, cval, pack )
+      else
+          write( text, '(a,i4,a)' )'VARIABLE ', id, ' '//name
+          call write_attribute( unit, trim(text), rval, ival, cval, pack )
+      end if
 
       return
     end subroutine mpp_write_meta_var
@@ -916,7 +928,6 @@
       character(len=*), intent(in), optional :: cval
 !pack is currently ignored in this routine: only used by netCDF I/O
       integer, intent(in), optional :: pack
-#ifndef use_PIO
 
       if( mpp_file(unit)%nohdrs )return
 !encode text string
@@ -942,10 +953,6 @@
           end if
       end if
       return
-#else
-      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-#endif
     end subroutine write_attribute
 
   subroutine write_attribute_pio(unit, attr_id, attr_name, rval, ival, cval, pack)
