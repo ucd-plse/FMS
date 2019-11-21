@@ -369,7 +369,7 @@ use pio,          only : File_desc_t, IO_desc_t, PIO_GLOBAL, PIO_UNLIMITED
 use pio,          only : PIO_put_att, PIO_def_dim, PIO_def_var, PIO_put_var
 use pio,          only : PIO_enddef, PIO_redef, PIO_def_var_deflate
 use pio,          only : PIO_DOUBLE, PIO_REAL, PIO_INT
-use pio,          only : PIO_closefile
+use pio,          only : PIO_closefile, PIO_syncfile
 use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_stage_ioDesc, mpp_pio_openfile
 #endif
 

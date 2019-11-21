@@ -300,8 +300,7 @@
 #ifndef use_PIO
           error = NF_SYNC(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
 #else
-          print *, "debug ", __FILE__, __LINE__
-          call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+          call PIO_syncfile(mpp_file(unit)%fileDesc)
 #endif
 #endif
       else
