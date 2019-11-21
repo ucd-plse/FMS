@@ -63,18 +63,25 @@ module mpp_pio_mod
   use mpp_mod,  only : input_nml_file
   use mpp_mod,  only : mpp_pe, mpp_root_pe, mpp_npes, get_mpp_comm
   use mpp_mod,  only : mpp_error, FATAL, WARNING, lowercase
-  use pio,      only : PIO_init, pio_createfile
+  use pio,      only : PIO_init, pio_createfile, PIO_initdecomp
   use pio,      only : pio_createfile, pio_openfile, pio_file_is_open
-  use pio,      only : File_desc_t, var_desc_t, iosystem_desc_t
+  use pio,      only : File_desc_t, var_desc_t, iosystem_desc_t, IO_desc_t
   use pio,      only : pio_write, pio_clobber, pio_nowrite
   use pio,      only : PIO_put_att
   use pio,      only : pio_iotype_netcdf, pio_iotype_pnetcdf
+  use pio,      only : PIO_DOUBLE, PIO_REAL, PIO_INT
   use mpp_parameter_mod,  only : MPP_WRONLY, MPP_RDONLY, MPP_APPEND, MPP_OVERWR
+  use mpp_parameter_mod,  only : CENTER, EAST, NORTH, CORNER
+  use mpp_domains_mod,    only : domain2d, mpp_get_compute_domain, mpp_get_global_domain
+  use mpp_domains_mod,    only : mpp_get_data_domain, mpp_get_memory_domain
 
   implicit none
   private
 
+#include <netcdf.inc>
+
   public :: mpp_pio_init
+  public :: mpp_pio_stage_ioDesc
   public :: mpp_pio_openfile
 
   character(len=64)   :: pio_netcdf_format, pio_typename
@@ -85,6 +92,17 @@ module mpp_pio_mod
   type(iosystem_desc_t) :: pio_iosystem     ! The ParallelIO system set up by PIO_init
   integer               :: pio_iotype       ! PIO_IOTYPE_NETCDF or PNETCDF
   integer               :: pio_optbase = 1  ! Start index of I/O processors
+
+  integer, parameter :: npos = 8 ! EAST=3, NORTH=5, CENTER=7, CORNER=8
+
+  ! IO descriptions
+  type ioDesc_t
+     type (IO_desc_t), pointer :: ptr => NULL()
+  end type ioDesc_t
+  type (ioDesc_t), dimension(npos) :: ioDesc_i
+  type (ioDesc_t), dimension(npos) :: ioDesc_r
+  type (ioDesc_t), dimension(npos) :: ioDesc_d
+
 
   contains
 
@@ -140,6 +158,130 @@ module mpp_pio_mod
     print *, "initialized PIO: ", localcomm
 
   end subroutine mpp_pio_init
+
+  subroutine mpp_pio_stage_ioDesc(basetype_nf, domain, ioDesc,pos, ndim3, ndim4)
+    integer,          intent(in) :: basetype_nf
+    type(domain2D),   intent(in) :: domain
+    type (IO_desc_t), pointer    :: ioDesc
+    integer,          intent(in) :: pos ! EAST=3, NORTH=5, CENTER=7, CORNER=8
+    integer,          intent(in) :: ndim3 ! size of third dimension
+    integer,          intent(in), optional :: ndim4 ! size of fourth dimension
+    ! local
+    type (IO_desc_t), pointer :: ioDesc_wrk
+    integer :: basetype_pio
+    integer :: ni, nj
+    integer :: local_size
+    integer :: global_size
+    integer :: nig, njg, nk
+    integer :: is, ie, js, je
+    integer :: isd, ied, jsd, jed
+    integer :: ism, iem, jsm, jem
+    integer :: i,j,k,n
+    integer, dimension(:), allocatable :: dof3d
+    logical :: decomp_init_needed
+
+    decomp_init_needed = .false.
+
+    if (associated(ioDesc)) return
+
+    ! check if cell position is valid
+    select case (pos)
+      case(EAST)
+      case(NORTH)
+      case(CENTER)
+      case(CORNER)
+      case default
+        call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown cell position')
+    end select
+
+    ! determine which ioDesc is the corresponding one
+    select case (basetype_nf)
+      case(NF_INT)
+        basetype_pio = PIO_INT
+        if (.not. associated(ioDesc_i(pos)%ptr)) then
+          allocate(ioDesc_i(pos)%ptr)
+          decomp_init_needed = .true.
+        endif
+        ioDesc_wrk => ioDesc_i(pos)%ptr
+      case(NF_REAL)
+        basetype_pio = PIO_REAL
+        if (.not. associated(ioDesc_r(pos)%ptr)) then
+          allocate(ioDesc_r(pos)%ptr)
+          decomp_init_needed = .true.
+        endif
+        ioDesc_wrk => ioDesc_r(pos)%ptr
+      case(NF_DOUBLE)
+        basetype_pio = PIO_DOUBLE
+        if (.not. associated(ioDesc_d(pos)%ptr)) then
+          allocate(ioDesc_d(pos)%ptr)
+          decomp_init_needed = .true.
+        endif
+        ioDesc_wrk => ioDesc_d(pos)%ptr
+      case default
+        call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown kind')
+    end select
+
+    ! If not already done, initialize the corresponding ioDesc
+    if (decomp_init_needed) then
+
+      if (present(ndim4)) then
+        call mpp_error(FATAL,'mpp_pio_decomp_init - 4th dimension not supported yet.')
+
+      else ! 3 dimensions only
+        ! construct dof3d
+        call mpp_get_compute_domain( domain, is, ie, js, je, xsize = ni, ysize = nj, position=pos)
+        call mpp_get_global_domain ( domain, xsize = nig, ysize = njg, position=pos)
+        call mpp_get_data_domain   ( domain, isd, ied, jsd, jed, position=pos )
+        call mpp_get_memory_domain ( domain, ism, iem, jsm, jem, position=pos )
+
+        global_size = nig*njg*ndim3
+        local_size = ni*nj*ndim3
+        allocate(dof3d(local_size))
+
+        n = 1
+        do k=1,ndim3
+          do j=js,je
+            do i=is,ie
+              dof3d(n) = i + (j-1)*nig + (k-1)*nig*njg
+              n = n+1
+            enddo
+          enddo
+        enddo
+
+        ! sanity check:
+        if (any(dof3d<1) .or. any(dof3d>global_size)) then
+          call mpp_error(FATAL,'error in dof3d construction')
+        endif
+
+        call mpp_pio_decomp_init(basetype_pio, domain, pos, dof3d, ioDesc_wrk, nig, njg, ndim3)
+      endif
+    endif
+
+    ioDesc => ioDesc_wrk
+
+  end subroutine mpp_pio_stage_ioDesc
+
+  subroutine mpp_pio_decomp_init(basetype_pio, domain, pos, compdof, ioDesc, nig, njg, ndim3, ndim4)
+    integer,                intent(in) :: basetype_pio
+    type(domain2D),         intent(in) :: domain
+    integer,                intent(in) :: pos ! EAST=3, NORTH=5, CENTER=7, CORNER=8
+    integer, dimension(:),  intent(in) :: compdof(:)
+    type (IO_desc_t),       pointer    :: ioDesc
+    integer,                intent(in) :: nig, njg, ndim3
+    integer, intent(in), optional      :: ndim4
+    ! local
+
+    if (.not. associated(ioDesc)) then
+        call mpp_error(FATAL,'ioDesc must be allocated before initialization.')
+    endif
+
+    if (present(ndim4)) then
+      call PIO_initdecomp(pio_iosystem, basetype_pio, (/nig, njg, ndim3, ndim4/), compdof, ioDesc)
+    else
+      call PIO_initdecomp(pio_iosystem, basetype_pio, (/nig, njg, ndim3/), compdof, ioDesc)
+    endif
+
+  end subroutine mpp_pio_decomp_init
 
   function mpp_pio_openfile(file_desc, file_name, action_flag)
     type(File_desc_t),  intent(inout)         :: file_desc
