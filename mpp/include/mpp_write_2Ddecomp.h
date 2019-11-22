@@ -160,25 +160,35 @@
           end if
 #else
 
-          ! TODO:
-          ! if (.not. associated(field%ioDesc)) then
-          !     print *, "debug ", field%name
-          !     call mpp_error( FATAL, 'MPP_WRITE: field ioDesc uninitialized.' )
-          ! endif
-
           if( newtime )then
               error = PIO_put_var( mpp_file(unit)%fileDesc, varid=mpp_file(unit)%id, &
                                    index=(/mpp_file(unit)%time_level/), ival=time )
           end if
-          if( field%pack == 0 )then
-              packed_data = CEILING(data)
-              error = PIO_put_var( mpp_file(unit)%fileDesc, field%id, start, axsiz, packed_data )
-          elseif( field%pack.GT.0 .and. field%pack.LE.2 )then
-              error = PIO_put_var( mpp_file(unit)%fileDesc, field%id, start, axsiz, data )
-          else              !convert to integer using scale and add: no error check on packed data representation
-              packed_data = nint((data-field%add)/field%scale)
-              error = PIO_put_var( mpp_file(unit)%fileDesc, field%id, start, axsiz, packed_data )
-          end if
+
+          if ( (field%ndim < 2) .or. (field%ndim == 2 .and. field%time_axis_index /= -1 )) then
+          ! Write one dimensional array
+
+            if( field%pack == 0 )then
+                packed_data = CEILING(data)
+                error = PIO_put_var( mpp_file(unit)%fileDesc, field%id, start, axsiz, packed_data )
+            elseif( field%pack.GT.0 .and. field%pack.LE.2 )then
+                error = PIO_put_var( mpp_file(unit)%fileDesc, field%id, start, axsiz, data )
+            else              !convert to integer using scale and add: no error check on packed data representation
+                packed_data = nint((data-field%add)/field%scale)
+                error = PIO_put_var( mpp_file(unit)%fileDesc, field%id, start, axsiz, packed_data )
+            end if
+
+          elseif (field%ndim>1) then
+          ! Write multidimensional array
+
+              if (.not. associated(field%ioDesc)) then
+                print *, "error for multidimensional field: ", field%name
+                call mpp_error( FATAL, 'MPP_WRITE: field ioDesc uninitialized.' )
+              endif
+
+              ! TODO write_narray
+          endif
+
 #endif
           call netcdf_err( error, mpp_file(unit), field=field )
 #endif
