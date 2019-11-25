@@ -94,14 +94,18 @@ module mpp_pio_mod
   integer               :: pio_optbase = 1  ! Start index of I/O processors
 
   integer, parameter :: npos = 8 ! EAST=3, NORTH=5, CENTER=7, CORNER=8
+  integer, parameter :: ndimc = 5 ! 2: 2d in space
+                                  ! 3: 3d in space
+                                  ! 4: 3d in space, 1d in time
+                                  ! 5: 2d in space, 1d in time
 
   ! IO descriptions
   type ioDesc_t
      type (IO_desc_t), pointer :: ptr => NULL()
   end type ioDesc_t
-  type (ioDesc_t), dimension(npos) :: ioDesc_i
-  type (ioDesc_t), dimension(npos) :: ioDesc_r
-  type (ioDesc_t), dimension(npos) :: ioDesc_d
+  type (ioDesc_t), dimension(npos,ndimc) :: ioDesc_i
+  type (ioDesc_t), dimension(npos,ndimc) :: ioDesc_r
+  type (ioDesc_t), dimension(npos,ndimc) :: ioDesc_d
 
 
   contains
@@ -179,8 +183,7 @@ module mpp_pio_mod
     integer :: i,j,k,n
     integer, dimension(:), allocatable :: dof3d
     logical :: decomp_init_needed
-
-    decomp_init_needed = .false.
+    integer :: dimc
 
     if (associated(ioDesc)) return
 
@@ -194,29 +197,51 @@ module mpp_pio_mod
         call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown cell position')
     end select
 
+    ! now determine dimension configuration index:
+    dimc = -1
+    if (.not. present(ndim4)) then
+      if (ndim3==1) then
+        dimc = 2
+      else
+        dimc = 3
+      endif
+    else
+      if (ndim3>1 .and. ndim4==1) then
+        dimc = 3
+      else if (ndim3>1 .and. ndim4>1) then
+        dimc = 4
+      else if (ndim3==1 .and. ndim4>1) then
+        dimc = 5
+      endif
+    endif
+    if (dimc == -1) then
+      call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Cannot determine dimension configuration')
+    endif
+
     ! determine which ioDesc is the corresponding one
+    decomp_init_needed = .false.
     select case (basetype_nf)
       case(NF_INT)
         basetype_pio = PIO_INT
-        if (.not. associated(ioDesc_i(pos)%ptr)) then
-          allocate(ioDesc_i(pos)%ptr)
+        if (.not. associated(ioDesc_i(pos, dimc)%ptr)) then
+          allocate(ioDesc_i(pos, dimc)%ptr)
           decomp_init_needed = .true.
         endif
-        ioDesc_wrk => ioDesc_i(pos)%ptr
+        ioDesc_wrk => ioDesc_i(pos,dimc)%ptr
       case(NF_REAL)
         basetype_pio = PIO_REAL
-        if (.not. associated(ioDesc_r(pos)%ptr)) then
-          allocate(ioDesc_r(pos)%ptr)
+        if (.not. associated(ioDesc_r(pos, dimc)%ptr)) then
+          allocate(ioDesc_r(pos,dimc)%ptr)
           decomp_init_needed = .true.
         endif
-        ioDesc_wrk => ioDesc_r(pos)%ptr
+        ioDesc_wrk => ioDesc_r(pos,dimc)%ptr
       case(NF_DOUBLE)
         basetype_pio = PIO_DOUBLE
-        if (.not. associated(ioDesc_d(pos)%ptr)) then
-          allocate(ioDesc_d(pos)%ptr)
+        if (.not. associated(ioDesc_d(pos, dimc)%ptr)) then
+          allocate(ioDesc_d(pos,dimc)%ptr)
           decomp_init_needed = .true.
         endif
-        ioDesc_wrk => ioDesc_d(pos)%ptr
+        ioDesc_wrk => ioDesc_d(pos,dimc)%ptr
       case default
         call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown kind')
     end select
