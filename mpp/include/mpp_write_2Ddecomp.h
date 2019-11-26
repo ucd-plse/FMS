@@ -50,6 +50,9 @@
       real(FLOAT_KIND) :: data_r4(nwords)
       pointer( ptr1, data_r4)
       pointer( ptr2, packed_data)
+#ifdef use_PIO
+      type(var_desc_t) vardesc
+#endif
 
       if (mpp_io_stack_size < nwords) call mpp_io_set_stack_size(nwords)
 
@@ -181,12 +184,25 @@
           elseif (field%ndim>1) then
           ! Write multidimensional array
 
-              if (.not. associated(field%ioDesc)) then
-                print *, "error for multidimensional field: ", field%name
-                call mpp_error( FATAL, 'MPP_WRITE: field ioDesc uninitialized.' )
-              endif
+            if (.not. associated(field%ioDesc)) then
+              print *, "error for multidimensional field: ", field%name
+              call mpp_error( FATAL, 'MPP_WRITE: field ioDesc uninitialized.' )
+            endif
 
-              ! TODO write_narray
+            ! set the members of temporary vardesc instance, which is passed when calling PIO_write_darray
+            vardesc%varID = field%id
+            vardesc%ncid = mpp_file(unit)%ncid
+
+            if( field%pack == 0 )then
+                packed_data = CEILING(data)
+                call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, packed_data, error)
+            elseif( field%pack.GT.0 .and. field%pack.LE.2 )then
+                call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+            else !convert to integer using scale and add: no error check on packed data representation
+                packed_data = nint((data-field%add)/field%scale)
+                call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, packed_data, error)
+            end if
+
           endif
 
 #endif
@@ -378,12 +394,15 @@
           .not. mpp_file(unit)%io_domain_exist)then
 
         if ( field%pack == 0 )then
-            call mpp_pio_stage_ioDesc(NF_INT, domain, field%ioDesc, field%position, size(data,dim=3))
+            call mpp_pio_stage_ioDesc(NF_INT, domain, field%ioDesc, field%position, field%ndim,&
+                                      field%time_axis_index, size(data,dim=3))
         elseif( field%pack > 0 .and. field%pack <= 2 )then
             if( KIND(data).EQ.DOUBLE_KIND )then
-              call mpp_pio_stage_ioDesc(NF_DOUBLE, domain, field%ioDesc, field%position, size(data,dim=3))
+              call mpp_pio_stage_ioDesc(NF_DOUBLE, domain, field%ioDesc, field%position, field%ndim,&
+                                        field%time_axis_index, size(data,dim=3))
             else if( KIND(data).EQ.FLOAT_KIND )then
-              call mpp_pio_stage_ioDesc(NF_REAL, domain, field%ioDesc, field%position, size(data,dim=3))
+              call mpp_pio_stage_ioDesc(NF_REAL, domain, field%ioDesc, field%position, field%ndim,&
+                                        field%time_axis_index, size(data,dim=3))
             end if
         endif
 
