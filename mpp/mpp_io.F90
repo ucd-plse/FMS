@@ -1119,10 +1119,11 @@ contains
 #include <mpp_io_util.inc>
 #include <mpp_io_misc.inc>
 #include <mpp_io_connect.inc>
-#include <mpp_io_read.inc>
 #ifndef use_PIO
+#include <mpp_io_read.inc>
 #include <mpp_io_write.inc>
 #else
+#include <mpp_pio_read.inc>
 #include <mpp_pio_write.inc>
 #endif
 

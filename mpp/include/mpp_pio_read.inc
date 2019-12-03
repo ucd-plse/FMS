@@ -232,6 +232,7 @@
 
       if( verbose )print '(a,2i6,2i5)', 'MPP_READ: PE, unit, %id, level =', pe, unit, mpp_file(unit)%id, lev
 
+#ifndef use_PIO
       if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
          start = 1
          axsiz(:) = field%size(:)
@@ -269,6 +270,10 @@
              case default
                 call mpp_error( FATAL, 'mpp_read_text: the field type should be NF_CHAR' )
           end select
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
       else                      !non-netCDF
           call mpp_error( FATAL, 'Currently dont support non-NetCDF mpp read' )
 
@@ -335,6 +340,7 @@
       if(present(read_time)) get_time_info = read_time
 
 #ifdef use_netCDF
+#ifndef use_PIO
 
       if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
         ncid = mpp_file(unit)%ncid
@@ -1077,6 +1083,11 @@
       endif
 
       mpp_file(unit)%initialized = .TRUE.
+#else
+      print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
+      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+#endif
+
 #else
       call mpp_error( FATAL, 'MPP_READ currently requires use_netCDF option' )
 #endif
