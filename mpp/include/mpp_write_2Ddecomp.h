@@ -395,14 +395,14 @@
 
         if ( field%pack == 0 )then
             call mpp_pio_stage_ioDesc(NF_INT, domain, field%ioDesc, field%position, field%ndim,&
-                                      field%time_axis_index, size(data,dim=3))
+                                      field%time_axis_index, field%size)
         elseif( field%pack > 0 .and. field%pack <= 2 )then
             if( KIND(data).EQ.DOUBLE_KIND )then
               call mpp_pio_stage_ioDesc(NF_DOUBLE, domain, field%ioDesc, field%position, field%ndim,&
-                                        field%time_axis_index, size(data,dim=3))
+                                        field%time_axis_index, field%size)
             else if( KIND(data).EQ.FLOAT_KIND )then
               call mpp_pio_stage_ioDesc(NF_REAL, domain, field%ioDesc, field%position, field%ndim,&
-                                        field%time_axis_index, size(data,dim=3))
+                                        field%time_axis_index, field%size)
             end if
         endif
 

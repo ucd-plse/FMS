@@ -164,15 +164,14 @@ module mpp_pio_mod
 
   end subroutine mpp_pio_init
 
-  subroutine mpp_pio_stage_ioDesc(basetype_nf, domain, ioDesc, pos, ndim, time_axis_index, dlen3, dlen4)
+  subroutine mpp_pio_stage_ioDesc(basetype_nf, domain, ioDesc, pos, ndim, time_axis_index, dlen)
     integer,          intent(in) :: basetype_nf
     type(domain2D),   intent(in) :: domain
     type (IO_desc_t), pointer    :: ioDesc
     integer,          intent(in) :: pos ! EAST=3, NORTH=5, CENTER=7, CORNER=8
     integer,          intent(in) :: ndim
     integer,          intent(in) :: time_axis_index
-    integer,          intent(in), optional :: dlen3 ! size of third dimension
-    integer,          intent(in), optional :: dlen4 ! size of fourth dimension
+    integer, dimension(:), pointer :: dlen
     ! local
     type (IO_desc_t), pointer :: ioDesc_wrk
     integer :: basetype_pio
@@ -183,7 +182,7 @@ module mpp_pio_mod
     integer :: is, ie, js, je
     integer :: isd, ied, jsd, jed
     integer :: ism, iem, jsm, jem
-    integer :: i,j,k,n
+    integer :: i,j,k,l,n
     integer, dimension(:), allocatable :: dof
     logical :: decomp_init_needed
     integer :: dlo ! dimension layout index
@@ -200,7 +199,7 @@ module mpp_pio_mod
         call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown cell position')
     end select
 
-    dlo = get_dlo(ndim, time_axis_index, dlen3, dlen4)
+    dlo = get_dlo(ndim, time_axis_index)
 
     ! determine which ioDesc is the corresponding one
     decomp_init_needed = .false.
@@ -261,12 +260,12 @@ module mpp_pio_mod
 
       else if (ndim == 3) then
         ! construct dof
-        global_size = nig*njg*dlen3
-        local_size = ni*nj*dlen3
+        global_size = nig*njg*dlen(3)
+        local_size = ni*nj*dlen(3)
         allocate(dof(local_size))
 
         n = 1
-        do k=1,dlen3
+        do k=1,dlen(3)
           do j=js,je
             do i=is,ie
               dof(n) = i + (j-1)*nig + (k-1)*nig*njg
@@ -281,7 +280,33 @@ module mpp_pio_mod
         endif
 
         ! initialize decomposition
-        call PIO_initdecomp(pio_iosystem, basetype_pio, (/nig, njg, dlen3/), dof, ioDesc_wrk)
+        call PIO_initdecomp(pio_iosystem, basetype_pio, (/nig, njg, dlen(3)/), dof, ioDesc_wrk)
+
+      else if (ndim == 4) then
+        ! construct dof
+        global_size = nig*njg*dlen(3)*dlen(4)
+        local_size = ni*nj*dlen(3)*dlen(4)
+        allocate(dof(local_size))
+
+        n = 1
+        do l=1,dlen(4)
+          do k=1,dlen(3)
+            do j=js,je
+              do i=is,ie
+                dof(n) = i + (j-1)*nig + (k-1)*nig*njg
+                n = n+1
+              enddo
+            enddo
+          enddo
+        enddo
+
+        ! sanity check:
+        if (any(dof<1) .or. any(dof>global_size)) then
+          call mpp_error(FATAL,'error in dof construction')
+        endif
+
+        ! initialize decomposition
+        call PIO_initdecomp(pio_iosystem, basetype_pio, (/nig, njg, dlen(3), dlen(4)/), dof, ioDesc_wrk)
 
       else
         call mpp_error(FATAL,'mpp_pio_decomp_init - Unsupported number of dimensions')
@@ -356,11 +381,9 @@ module mpp_pio_mod
   ! ( we need to determine the dimension layout, because we may need to treat, for instance,  two 3D fields
   ! differently, e.g., when the third dimension of one field is z-coordinate  while the third dimension of
   ! another field may be time.
-  integer function get_dlo(ndim, time_axis_index, dlen3, dlen4)
+  integer function get_dlo(ndim, time_axis_index)
     integer, intent(in) :: ndim
     integer, intent(in) :: time_axis_index
-    integer, intent(in), optional :: dlen3 ! size of third dimension
-    integer, intent(in), optional :: dlen4 ! size of fourth dimension
 
     if (ndim==2) then
       get_dlo = 1
