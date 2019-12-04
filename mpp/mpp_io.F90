@@ -368,9 +368,11 @@ use mpp_domains_mod, only: domainUG, &
 use pio,          only : File_desc_t, IO_desc_t, var_desc_t
 use pio,          only : PIO_put_att, PIO_def_dim, PIO_def_var, PIO_put_var, PIO_write_darray
 use pio,          only : PIO_enddef, PIO_redef, PIO_def_var_deflate
-use pio,          only : PIO_DOUBLE, PIO_REAL, PIO_INT, PIO_GLOBAL, PIO_UNLIMITED
+use pio,          only : PIO_DOUBLE, PIO_REAL, PIO_INT, PIO_GLOBAL, PIO_UNLIMITED, PIO_OFFSET_KIND
+use pio,          only : PIO_CHAR
 use pio,          only : PIO_closefile, PIO_syncfile
-use pio,          only : PIO_inquire_variable, PIO_inquire_dimension, PIO_inquire
+use pio,          only : PIO_inquire_variable, PIO_inquire_dimension, PIO_inquire, PIO_inq_dimid
+use pio,          only : PIO_inq_varid, PIO_inq_attname, PIO_inq_att, PIO_get_att, PIO_get_var
 use mpp_pio_mod,  only : mpp_pio_init, mpp_pio_stage_ioDesc, mpp_pio_openfile
 #endif
 
