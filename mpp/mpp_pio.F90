@@ -317,10 +317,11 @@ module mpp_pio_mod
 
   end subroutine mpp_pio_stage_ioDesc
 
-  function mpp_pio_openfile(file_desc, file_name, action_flag)
+  function mpp_pio_openfile(file_desc, file_name, action_flag, ncid)
     type(File_desc_t),  intent(inout)         :: file_desc
     character(len=*),   intent(in)            :: file_name
     integer,            intent(in)            :: action_flag
+    integer,            intent(out)           :: ncid
     ! local
     integer :: mpp_pio_openfile, stat
     integer :: nmode
@@ -330,17 +331,23 @@ module mpp_pio_mod
     print *, "OPENING >>>>>>>>>>>>>>>> ", trim(file_name)
 
     !TODO Remove below if statement:
-    if (trim(file_name) == "./ocean_geometry.nc") then
-      file_name_debug = "./ocean_geometry_pio.nc"
-    else if (trim(file_name) == "./Vertical_coordinate.nc") then
-      file_name_debug = "./Vertical_coordinate_pio.nc"
-    else if (trim(file_name) == "./MOM_IC.nc") then
-      file_name_debug = "./MOM_IC_pio.nc"
-    else if (trim(file_name) == "./ocean.stats.nc") then
-      file_name_debug = "./ocean.stats_pio.nc"
+    if (action_flag == MPP_RDONLY ) then
+      file_name_debug = trim(file_name)
     else
-      print *, "debug ", __FILE__, __LINE__
-      call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+      if (trim(file_name) == "./ocean_geometry.nc") then
+        file_name_debug = "./ocean_geometry_pio.nc"
+      else if (trim(file_name) == "./Vertical_coordinate.nc") then
+        file_name_debug = "./Vertical_coordinate_pio.nc"
+      else if (trim(file_name) == "./MOM_IC.nc") then
+        file_name_debug = "./MOM_IC_pio.nc"
+      else if (trim(file_name) == "./ocean.stats.nc") then
+        file_name_debug = "./ocean.stats_pio.nc"
+      else if (trim(file_name) == "prog.nc") then
+        file_name_debug = "./prog_pio.nc"
+      else
+        print *, "debug ", __FILE__, __LINE__
+        call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+      endif
     endif
 
     inquire(file=file_name_debug, exist=file_exists)
@@ -373,6 +380,8 @@ module mpp_pio_mod
       print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
       call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
     endif
+
+    ncid = file_desc%fh
 
     mpp_pio_openfile = stat
   end function mpp_pio_openfile
