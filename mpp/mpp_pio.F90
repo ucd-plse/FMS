@@ -61,7 +61,7 @@ module mpp_pio_mod
 #include <fms_platform.h>
 
   use mpp_mod,  only : input_nml_file
-  use mpp_mod,  only : mpp_pe, mpp_root_pe, mpp_npes, get_mpp_comm
+  use mpp_mod,  only : mpp_pe, mpp_root_pe, mpp_npes, get_mpp_comm, mpp_max
   use mpp_mod,  only : mpp_error, FATAL, WARNING, lowercase
   use pio,      only : PIO_init, pio_createfile, PIO_initdecomp
   use pio,      only : pio_createfile, pio_openfile, pio_file_is_open
@@ -158,7 +158,7 @@ module mpp_pio_mod
       pio_iosystem,   & ! The ParallelIO system set up by PIO_init
       pio_optbase )     ! Start index of I/O processors (optional)
 
-    ierr = PIO_set_log_level(1)
+    !ierr = PIO_set_log_level(1)
 
     print *, "initialized PIO: ", localcomm
 
@@ -182,6 +182,7 @@ module mpp_pio_mod
     integer :: is, ie, js, je
     integer :: isd, ied, jsd, jed
     integer :: ism, iem, jsm, jem
+    integer :: ioff, joff
     integer :: i,j,k,l,n
     integer, dimension(:), allocatable :: dof
     logical :: decomp_init_needed
@@ -196,7 +197,8 @@ module mpp_pio_mod
       case(CENTER)
       case(CORNER)
       case default
-        call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown cell position')
+        print *, "field position: ", pos
+        call mpp_error(FATAL,'mpp_pio_stage_ioDesc - Unknown field position')
     end select
 
     dlo = get_dlo(ndim, time_axis_index)
@@ -237,14 +239,20 @@ module mpp_pio_mod
       call mpp_get_data_domain   ( domain, isd, ied, jsd, jed, position=pos )
       call mpp_get_memory_domain ( domain, ism, iem, jsm, jem, position=pos )
 
+      ! determine the index offsets:
+      ioff = 1 - is
+      joff = 1 - js
+      call mpp_max(ioff)
+      call mpp_max(joff)
+
       if (ndim == 2) then
         global_size = nig*njg
         local_size = ni*nj
         allocate(dof(local_size))
 
         n = 1
-        do j=js,je
-          do i=is,ie
+        do j=js+joff,je+joff
+          do i=is+ioff,ie+ioff
             dof(n) = i + (j-1)*nig
             n = n+1
           enddo
@@ -252,6 +260,9 @@ module mpp_pio_mod
 
         ! sanity check:
         if (any(dof<1) .or. any(dof>global_size)) then
+          print *, "global size: ", global_size, &
+                   "minval(dof) ", minval(dof),  &
+                   "maxval(dof) ", maxval(dof)
           call mpp_error(FATAL,'error in dof construction')
         endif
 
@@ -266,8 +277,8 @@ module mpp_pio_mod
 
         n = 1
         do k=1,dlen(3)
-          do j=js,je
-            do i=is,ie
+          do j=js+joff,je+joff
+            do i=is+ioff,ie+ioff
               dof(n) = i + (j-1)*nig + (k-1)*nig*njg
               n = n+1
             enddo
@@ -276,6 +287,9 @@ module mpp_pio_mod
 
         ! sanity check:
         if (any(dof<1) .or. any(dof>global_size)) then
+          print *, "global size: ", global_size, &
+                   "minval(dof) ", minval(dof),  &
+                   "maxval(dof) ", maxval(dof)
           call mpp_error(FATAL,'error in dof construction')
         endif
 
@@ -291,8 +305,8 @@ module mpp_pio_mod
         n = 1
         do l=1,dlen(4)
           do k=1,dlen(3)
-            do j=js,je
-              do i=is,ie
+            do j=js+joff,je+joff
+              do i=is+ioff,ie+ioff
                 dof(n) = i + (j-1)*nig + (k-1)*nig*njg
                 n = n+1
               enddo
@@ -302,6 +316,9 @@ module mpp_pio_mod
 
         ! sanity check:
         if (any(dof<1) .or. any(dof>global_size)) then
+          print *, "global size: ", global_size, &
+                   "minval(dof) ", minval(dof),  &
+                   "maxval(dof) ", maxval(dof)
           call mpp_error(FATAL,'error in dof construction')
         endif
 
