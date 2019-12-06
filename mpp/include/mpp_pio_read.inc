@@ -341,9 +341,8 @@
       get_time_info = .TRUE.
       if(present(read_time)) get_time_info = read_time
 
-      if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
-
 #ifdef use_netCDF
+      if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
 
         ncid = mpp_file(unit)%ncid
         error = PIO_inquire(ncid,ndim, nvar_total,&
@@ -393,7 +392,6 @@
            mpp_file(unit)%Att(i)%len = len
            mpp_file(unit)%Att(i)%type = type
 
-           if (mpp_pe()==0) print *, "DEBUG - read attribute ", name
 !
 !  allocate space for att data and assign
 !
