@@ -244,8 +244,7 @@
 #ifndef use_PIO
          if( mpp_file(unit)%opened )error = NF_CLOSE(mpp_file(unit)%ncid)
 #else
-          print *, "debug ", __FILE__, __LINE__
-          call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+         if( mpp_file(unit)%opened )call PIO_closefile(mpp_file(unit)%fileDesc)
 #endif
       end do
 #endif
