@@ -401,10 +401,6 @@
 #else
       if( npes.GT.1 .AND. mpp_file(unit)%threading.EQ.MPP_SINGLE) then
 
-        if (.not. mpp_file(unit)%io_domain_exist)then
-          call mpp_error( FATAL, 'non io_domain, not implemented' )
-        endif
-
         ! if field%ndim is unitialized, acquire it from data shape:
         ndim = field%ndim
         if (.not. (ndim>0 .and. ndim<10)) then
@@ -416,14 +412,14 @@
         endif
 
         if ( field%pack == 0 )then
-            call mpp_pio_stage_ioDesc(NF_INT, io_domain, field%ioDesc, field%position, ndim,&
+            call mpp_pio_stage_ioDesc(NF_INT, domain, field%ioDesc, field%position, ndim,&
                                       field%time_axis_index, field%size)
         elseif( field%pack > 0 .and. field%pack <= 2 )then
             if( KIND(data).EQ.DOUBLE_KIND )then
-              call mpp_pio_stage_ioDesc(NF_DOUBLE, io_domain, field%ioDesc, field%position, ndim,&
+              call mpp_pio_stage_ioDesc(NF_DOUBLE, domain, field%ioDesc, field%position, ndim,&
                                         field%time_axis_index, field%size)
             else if( KIND(data).EQ.FLOAT_KIND )then
-              call mpp_pio_stage_ioDesc(NF_REAL, io_domain, field%ioDesc, field%position, ndim,&
+              call mpp_pio_stage_ioDesc(NF_REAL, domain, field%ioDesc, field%position, ndim,&
                                         field%time_axis_index, field%size)
             end if
         endif
@@ -432,7 +428,7 @@
           if ( data_has_halos )then
             allocate( cdata(is:ie,js:je,size(data,3)) )
             cdata(:,:,:) = data(is-isd+1:ie-isd+1,js-jsd+1:je-jsd+1,:)
-            call WRITE_RECORD_( unit, field, size(cdata(:,:,:)), cdata, tstamp, io_domain, tile_count, ndim=ndim )
+            call WRITE_RECORD_( unit, field, size(cdata(:,:,:)), cdata, tstamp, domain, tile_count, ndim=ndim )
           else
             call WRITE_RECORD_( unit, field, size(data(:,:,:)), data, tstamp, ndim=ndim)
           endif
@@ -441,7 +437,7 @@
         endif
 
       else
-          call mpp_error( FATAL, 'Must have multiple PEs and no IO domains when running with PIO' )
+          call mpp_error( FATAL, 'Must have multiple PEs and no file threading when running with PIO' )
       end if
 #endif
 
@@ -493,6 +489,8 @@
           call mpp_error( FATAL, 'MPP_WRITE: data must be either on compute domain or data domain.' )
       end if
       halos_are_global = x_is_global .AND. y_is_global
+
+#ifndef use_PIO
       if( npes.GT.1 .AND. mpp_file(unit)%threading.EQ.MPP_SINGLE )then
           if( halos_are_global )then
               call mpp_update_domains( data, domain, position = position )
@@ -559,6 +557,9 @@
 !data is already contiguous
           call WRITE_RECORD_( unit, field, size(data(:,:,:,:)), data, tstamp, domain, tile_count )
       end if
+#else
+      call mpp_error( FATAL, 'PIO: MPP_WRITE_2DDECOMP_4D_ not implemented' )
+#endif
 
       call mpp_clock_end(mpp_write_clock)
 
