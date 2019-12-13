@@ -158,7 +158,7 @@ module mpp_pio_mod
       pio_iosystem,   & ! The ParallelIO system set up by PIO_init
       pio_optbase )     ! Start index of I/O processors (optional)
 
-    !ierr = PIO_set_log_level(1)
+    ierr = PIO_set_log_level(1)
 
     print *, "initialized PIO: ", localcomm
 
@@ -343,31 +343,10 @@ module mpp_pio_mod
     integer :: mpp_pio_openfile, stat
     integer :: nmode
     logical :: file_exists
-    character(len=128) :: file_name_debug ! TODO remove this
 
     print *, "OPENING >>>>>>>>>>>>>>>> ", trim(file_name)
 
-    !TODO Remove below if statement:
-    if (action_flag == MPP_RDONLY ) then
-      file_name_debug = trim(file_name)
-    else
-      if (trim(file_name) == "./ocean_geometry.nc") then
-        file_name_debug = "./ocean_geometry_pio.nc"
-      else if (trim(file_name) == "./Vertical_coordinate.nc") then
-        file_name_debug = "./Vertical_coordinate_pio.nc"
-      else if (trim(file_name) == "./MOM_IC.nc") then
-        file_name_debug = "./MOM_IC_pio.nc"
-      else if (trim(file_name) == "./ocean.stats.nc") then
-        file_name_debug = "./ocean.stats_pio.nc"
-      else if (trim(file_name) == "prog.nc") then
-        file_name_debug = "./prog_pio.nc"
-      else
-        print *, "debug ", __FILE__, __LINE__
-        call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
-      endif
-    endif
-
-    inquire(file=file_name_debug, exist=file_exists)
+    inquire(file=trim(file_name), exist=file_exists)
 
     if (action_flag == MPP_WRONLY) then
       nmode = pio_write
@@ -390,9 +369,9 @@ module mpp_pio_mod
     endif
 
     if (action_flag == MPP_WRONLY .or. action_flag == MPP_OVERWR ) then
-      stat = pio_createfile(pio_iosystem, file_desc, pio_iotype, trim(file_name_debug), nmode)
+      stat = pio_createfile(pio_iosystem, file_desc, pio_iotype, trim(file_name), nmode)
     else if (action_flag == MPP_RDONLY) then
-      stat = pio_openfile(pio_iosystem, file_desc, pio_iotype, trim(file_name_debug), nmode)
+      stat = pio_openfile(pio_iosystem, file_desc, pio_iotype, trim(file_name), nmode)
     else
       print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
       call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
