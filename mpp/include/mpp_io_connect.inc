@@ -302,7 +302,7 @@
       endif   
       if(pio_flag .AND. form_flag == MPP_NETCDF) then
         write_on_this_pe = .true.
-        read_on_this_pe = .true.
+        !read_on_this_pe = .true.
       endif
    
       if( io_domain_exist) then
@@ -646,12 +646,12 @@
               !mpp_file(unit)%format=form_flag ! need this for mpp_read
               !call mpp_read_meta(unit, read_time=.FALSE.)
           else if( action_flag.EQ.MPP_RDONLY )then
-              inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
+               inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
               if (.NOT.exists) call mpp_error(FATAL,'MPP_OPEN:'&
                    &//trim(mpp_file(unit)%name)//' does not exist.')
-              error = mpp_pio_openfile(mpp_file(unit)%fileDesc, mpp_file(unit)%name, action_flag, mpp_file(unit)%ncid)
-              if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: opening existing netCDF file: pe, filename=',&
-                   pe, mpp_file(unit)%name
+              error=NF__OPEN(trim(mpp_file(unit)%name),NF_NOWRITE,fsize,mpp_file(unit)%ncid);call netcdf_err(error,mpp_file(unit))
+              if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: opening existing netCDF file: pe, ncid, time_axis_id=',&
+                   pe, mpp_file(unit)%ncid, mpp_file(unit)%id
               mpp_file(unit)%format=form_flag ! need this for mpp_read
               call mpp_read_meta(unit, read_time=.TRUE.)
           end if
@@ -926,7 +926,11 @@
 #ifndef use_PIO
             error = NF_CLOSE(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
 #else
-            call PIO_closefile(mpp_file(unit)%fileDesc)
+      if( mpp_file(unit)%action == MPP_RDONLY )then
+          error = NF_CLOSE(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+      else
+          call PIO_closefile(mpp_file(unit)%fileDesc)
+      endif
 #endif
 #endif    
          else
