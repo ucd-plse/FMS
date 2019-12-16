@@ -67,7 +67,7 @@ module mpp_pio_mod
   use pio,      only : pio_createfile, pio_openfile, pio_file_is_open
   use pio,      only : File_desc_t, var_desc_t, iosystem_desc_t, IO_desc_t
   use pio,      only : pio_write, pio_clobber, pio_nowrite
-  use pio,      only : PIO_put_att
+  use pio,      only : PIO_put_att, pio_inquire, PIO_get_local_array_size
   use pio,      only : pio_iotype_netcdf, pio_iotype_pnetcdf
   use pio,      only : PIO_set_log_level
   use pio,      only : PIO_DOUBLE, PIO_REAL, PIO_INT
@@ -328,6 +328,26 @@ module mpp_pio_mod
       else
         call mpp_error(FATAL,'mpp_pio_decomp_init - Unsupported number of dimensions')
       endif
+    else
+      ! Check if the size of the decomposition to be adopted is compatible with the size of the field:
+      ! to be adopted is the right size:
+      call mpp_get_compute_domain( domain, is, ie, js, je, xsize = ni, ysize = nj, position=pos)
+      select case (ndim)
+        case(2)
+          local_size = ni*nj
+        case(3)
+          local_size = ni*nj*dlen(3)
+        case(4)
+          local_size = ni*nj*dlen(3)*dlen(4)
+        case default
+          call mpp_error(FATAL,'Incompatible ndim in mpp_pio_stage_ioDesc.')
+      end select
+
+      if (local_size /= PIO_get_local_array_size(ioDesc_wrk))then
+          print *, mpp_pe(), "local_size:", local_size, "decomp.size:", PIO_get_local_array_size(ioDesc_wrk)
+          print *, mpp_pe(), "ni:",ni, "nj:",nj, "pos:",pos
+          call mpp_error(FATAL,'incompatible local_size and ioDesc.')
+      endif
     endif
 
     ioDesc => ioDesc_wrk
@@ -343,6 +363,7 @@ module mpp_pio_mod
     integer :: mpp_pio_openfile, stat
     integer :: nmode
     logical :: file_exists
+    integer :: nDimensions
 
     print *, "OPENING >>>>>>>>>>>>>>>> ", trim(file_name)
 
