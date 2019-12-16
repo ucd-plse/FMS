@@ -309,10 +309,10 @@
 
 !----------
 !ug support
-          if (associated(io_domain)) then
+          if (associated(io_domain) .and. .not. pio_flag) then
              ! in this case, only write out from the root_pe of io_domain.
               write_on_this_pe = mpp_domain_is_tile_root_pe(io_domain)
-          elseif (associated(io_domain_ug)) then
+          elseif (associated(io_domain_ug) .and. .not. pio_flag) then
               write_on_this_pe = mpp_domain_UG_is_tile_root_pe(io_domain_ug)
           endif
 !----------
