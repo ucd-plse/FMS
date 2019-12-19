@@ -54,6 +54,7 @@
       pointer( ptr2, packed_data)
 #ifdef use_PIO
       type(var_desc_t) vardesc
+      real(FLOAT_KIND) :: data_single(nwords)
 #endif
 
       if (mpp_io_stack_size < nwords) call mpp_io_set_stack_size(nwords)
@@ -204,8 +205,20 @@
             if( field%pack == 0 )then
                 packed_data = CEILING(data)
                 call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, packed_data, error)
-            elseif( field%pack.GT.0 .and. field%pack.LE.2 )then
-                call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+            elseif( field%pack == 1)then ! double precision
+                if( KIND(data).EQ.DOUBLE_KIND )then
+                    call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+                else
+                    print *, "field name:", field%name
+                    call mpp_error( FATAL, 'MPP_WRITE: cannot write single precision as double precision')
+                endif
+            elseif( field%pack == 2 )then ! single precision
+                if( KIND(data).EQ.DOUBLE_KIND )then
+                    data_single = real(data, kind=4)
+                    call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data_single, error)
+                else
+                    call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+                endif
             else !convert to integer using scale and add: no error check on packed data representation
                 packed_data = nint((data-field%add)/field%scale)
                 call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, packed_data, error)
@@ -571,14 +584,12 @@
           if ( field%pack == 0 )then
               call mpp_pio_stage_ioDesc(NF_INT, domain, field%ioDesc, field%position, ndim,&
                                         field%time_axis_index, field%size)
-          elseif( field%pack > 0 .and. field%pack <= 2 )then
-              if( KIND(data).EQ.DOUBLE_KIND )then
+          elseif( field%pack == 1)then ! double precision
                 call mpp_pio_stage_ioDesc(NF_DOUBLE, domain, field%ioDesc, field%position, ndim,&
                                           field%time_axis_index, field%size)
-              else if( KIND(data).EQ.FLOAT_KIND )then
+          elseif( field%pack == 2 )then ! single precision
                 call mpp_pio_stage_ioDesc(NF_REAL, domain, field%ioDesc, field%position, ndim,&
                                           field%time_axis_index, field%size)
-              end if
           endif
 
           if(mpp_file(unit)%write_on_this_pe ) then
