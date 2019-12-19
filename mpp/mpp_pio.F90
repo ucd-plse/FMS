@@ -163,7 +163,7 @@ module mpp_pio_mod
       pio_iosystem,   & ! The ParallelIO system set up by PIO_init
       pio_optbase )     ! Start index of I/O processors (optional)
 
-    ierr = PIO_set_log_level(1)
+    !ierr = PIO_set_log_level(1)
 
     print *, "initialized PIO: ", localcomm
 
