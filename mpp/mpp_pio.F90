@@ -71,6 +71,7 @@ module mpp_pio_mod
   use pio,      only : pio_iotype_netcdf, pio_iotype_pnetcdf
   use pio,      only : PIO_set_log_level
   use pio,      only : PIO_DOUBLE, PIO_REAL, PIO_INT
+  use pio,      only : PIO_64BIT_OFFSET, PIO_64BIT_DATA
   use mpp_parameter_mod,  only : MPP_WRONLY, MPP_RDONLY, MPP_APPEND, MPP_OVERWR
   use mpp_parameter_mod,  only : CENTER, EAST, NORTH, CORNER
   use mpp_domains_mod,    only : domain2d, mpp_get_compute_domain, mpp_get_global_domain
@@ -97,8 +98,8 @@ module mpp_pio_mod
   integer, parameter :: npos = 8 ! EAST=3, NORTH=5, CENTER=7, CORNER=8
 
   ! below variables (maxl3, maxl4, lens3, lens4, ndlo) are used to match iodesc pointers
-  integer, parameter :: maxl3 = 3 ! max number of lengths for dim=3 for iodesc bookkeeping
-  integer, parameter :: maxl4 = 3 ! max number of lengths for dim=4 for iodesc bookkeeping
+  integer, parameter :: maxl3 = 5 ! max number of lengths for dim=3 for iodesc bookkeeping
+  integer, parameter :: maxl4 = 5 ! max number of lengths for dim=4 for iodesc bookkeeping
   integer, dimension(maxl3) :: lens3 = 0 ! array of dimension lengths for 3rd dimension
   integer, dimension(maxl4) :: lens4 = 0 ! array of dimension lengths for 4th dimension
   integer, parameter :: ndlo = 5 ! number of potential dimension layouts. see get_dlo function.
@@ -367,6 +368,14 @@ module mpp_pio_mod
     else
       print *, "NOT_IMPLEMENTED ", __FILE__, __LINE__
       call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+    endif
+
+    if (trim(pio_netcdf_format) == "64bit_offset" .or. trim(pio_netcdf_format) == "64BIT_OFFSET") then
+      nmode = ior(nmode, PIO_64BIT_OFFSET)
+    else if (trim(pio_netcdf_format) == "64bit_data" .or. trim(pio_netcdf_format) == "64BIT_DATA") then
+      nmode = ior(nmode, PIO_64BIT_DATA)
+    else
+      call mpp_error(FATAL,'Cannot determine pio_netcdf_format')
     endif
 
     if (pio_file_is_open(file_desc)) then
