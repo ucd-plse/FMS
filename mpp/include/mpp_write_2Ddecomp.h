@@ -54,6 +54,7 @@
       pointer( ptr2, packed_data)
 #ifdef use_PIO
       type(var_desc_t) vardesc
+      real(FLOAT_KIND) :: data_single(nwords)
 #endif
 
       if (mpp_io_stack_size < nwords) call mpp_io_set_stack_size(nwords)
@@ -204,8 +205,20 @@
             if( field%pack == 0 )then
                 packed_data = CEILING(data)
                 call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, packed_data, error)
-            elseif( field%pack.GT.0 .and. field%pack.LE.2 )then
-                call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+            elseif( field%pack == 1)then ! double precision
+                if( KIND(data).EQ.DOUBLE_KIND )then
+                    call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+                else
+                    print *, "field name:", field%name
+                    call mpp_error( FATAL, 'MPP_WRITE: cannot write single precision as double precision')
+                endif
+            elseif( field%pack == 2 )then ! single precision
+                if( KIND(data).EQ.DOUBLE_KIND )then
+                    data_single = real(data, kind=4)
+                    call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data_single, error)
+                else
+                    call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error)
+                endif
             else !convert to integer using scale and add: no error check on packed data representation
                 packed_data = nint((data-field%add)/field%scale)
                 call PIO_write_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, packed_data, error)
@@ -401,7 +414,7 @@
 #else
       if( npes.GT.1 .AND. mpp_file(unit)%threading.EQ.MPP_SINGLE) then
 
-        ! if field%ndim is unitialized, acquire it from data shape:
+        ! if field%ndim is unitialized, infer it from data shape:
         ndim = field%ndim
         if (.not. (ndim>0 .and. ndim<10)) then
           if (size(data,3)>1) then
@@ -462,6 +475,7 @@
 !NEW: data may be on compute OR data domain
       logical :: data_has_halos, halos_are_global, x_is_global, y_is_global
       integer :: is, ie, js, je, isd, ied, jsd, jed, isg, ieg, jsg, jeg, ism, iem, jsm, jem
+      integer :: ndim
       integer :: position, errunit
       type(domain2d), pointer :: io_domain=>NULL()
 
@@ -558,7 +572,41 @@
           call WRITE_RECORD_( unit, field, size(data(:,:,:,:)), data, tstamp, domain, tile_count )
       end if
 #else
-      call mpp_error( FATAL, 'PIO: MPP_WRITE_2DDECOMP_4D_ not implemented' )
+      if( npes.GT.1 .AND. mpp_file(unit)%threading.EQ.MPP_SINGLE )then
+
+          ! if field%ndim is unitialized, set ndim to 4.
+          ndim = field%ndim
+          if (.not. (ndim>0 .and. ndim<5)) then
+              ndim = 4
+          endif
+
+          ! initialize iodesc
+          if ( field%pack == 0 )then
+              call mpp_pio_stage_ioDesc(NF_INT, domain, field%ioDesc, field%position, ndim,&
+                                        field%time_axis_index, field%size)
+          elseif( field%pack == 1)then ! double precision
+                call mpp_pio_stage_ioDesc(NF_DOUBLE, domain, field%ioDesc, field%position, ndim,&
+                                          field%time_axis_index, field%size)
+          elseif( field%pack == 2 )then ! single precision
+                call mpp_pio_stage_ioDesc(NF_REAL, domain, field%ioDesc, field%position, ndim,&
+                                          field%time_axis_index, field%size)
+          endif
+
+          if(mpp_file(unit)%write_on_this_pe ) then
+              if ( data_has_halos )then
+                  allocate( cdata(is:ie,js:je,size(data,3),size(data,4)) )
+                  cdata(:,:,:,:) = data(is-isd+1:ie-isd+1,js-jsd+1:je-jsd+1,:,:)
+                  call WRITE_RECORD_( unit, field, size(cdata(:,:,:,:)), cdata, tstamp, domain, tile_count, ndim=ndim)
+              else
+                  call WRITE_RECORD_( unit, field, size(data(:,:,:,:)), data, tstamp, domain, tile_count, ndim=ndim )
+              endif
+          else
+              call mpp_error( FATAL, 'All processors must write when PIO is active' )
+          endif
+
+      else
+          call mpp_error( FATAL, 'Must have multiple PEs and no file threading when running with PIO' )
+      end if
 #endif
 
       call mpp_clock_end(mpp_write_clock)

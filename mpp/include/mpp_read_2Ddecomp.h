@@ -40,16 +40,9 @@
       pointer( ptr2, ivals )
       pointer( ptr3, rvals )
       pointer( ptr4, r8vals )
-#ifdef use_PIO
-      type(var_desc_t) vardesc
-      character(len=256) :: name
-      integer :: nvdims
-#endif
-
       if (mpp_io_stack_size < nwords) call mpp_io_set_stack_size(nwords)
 
 #ifdef use_netCDF
-#ifndef use_PIO
       word_sz = size(transfer(data(1),one_byte))
 
           select case (field%type)
@@ -113,141 +106,6 @@
              case default
                 call mpp_error( FATAL, 'MPP_READ: invalid pack value' )
           end select
-#else
-      word_sz = size(transfer(data(1),one_byte))
-
-      if ( (field%ndim < 2) .or. (field%ndim == 2 .and. field%time_axis_index /= -1 ))  then
-      ! Write one dimensional array
-
-          select case (field%type)
-             case(NF_BYTE)
-! use type conversion
-                call mpp_error( FATAL, 'MPP_READ: does not support NF_BYTE packing' )
-             case(NF_SHORT)
-                call mpp_error(FATAL, "mpp_io_mod(mpp_read_meta): short int not supported in PIO")
-             case(PIO_INT)
-
-                ptr2 = LOC(mpp_io_stack(1))
-
-                error = PIO_get_var ( mpp_file(unit)%fileDesc, field%id, ivals)
-                call netcdf_err( error, mpp_file(unit), field=field )
-                if(field%scale == 1.0 .and. field%add == 0.0) then
-                   data(:)=ivals(:)
-                else
-                   data(:)=ivals(:)*field%scale + field%add
-                end if
-             case(PIO_REAL)
-                ptr3 = LOC(mpp_io_stack(1))
-                if (size(transfer(rvals(1),one_byte)) .eq. word_sz) then
-                  error = PIO_get_var ( mpp_file(unit)%fileDesc, field%id, data)
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale /= 1.0 .or. field%add /= 0.0) then
-                     data(:)=data(:)*field%scale + field%add
-                  end if
-                else
-                  error = PIO_get_var ( mpp_file(unit)%fileDesc, field%id, rvals)
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale == 1.0 .and. field%add == 0.0) then
-                     data(:)=rvals(:)
-                  else
-                     data(:)=rvals(:)*field%scale + field%add
-                  end if
-                end if
-             case(PIO_DOUBLE)
-                ptr4 = LOC(mpp_io_stack(1))
-                if (size(transfer(r8vals(1),one_byte)) .eq. word_sz) then
-                  error = PIO_get_var ( mpp_file(unit)%fileDesc, field%id, data)
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale /= 1.0 .or. field%add /= 0.0) then
-                     data(:)=data(:)*field%scale + field%add
-                  end if
-                else
-                  error = PIO_get_var ( mpp_file(unit)%fileDesc, field%id, r8vals)
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale == 1.0 .and. field%add == 0.0) then
-                     data(:)=r8vals(:)
-                  else
-                     data(:)=r8vals(:)*field%scale + field%add
-                  end if
-                end if
-             case default
-                call mpp_error( FATAL, 'MPP_READ: invalid pack value' )
-          end select
-
-      else ! Write multidimensional array
-
-          !!!if (.not. associated(field%ioDesc)) then
-          !!!  print *, "error for multidimensional input field: ", field%name
-          !!!  call mpp_error( FATAL, 'MPP_WRITE: field ioDesc uninitialized.' )
-          !!!endif
-
-          ! set the members of temporary vardesc instance, which is passed when calling PIO_read_darray
-          varDesc%varID = field%id
-          varDesc%ncid = mpp_file(unit)%ncid
-
-          select case (field%type)
-             case(NF_BYTE)
-! use type conversion
-                call mpp_error( FATAL, 'MPP_READ: does not support NF_BYTE packing' )
-             case(NF_SHORT)
-                call mpp_error(FATAL, "mpp_io_mod(mpp_read_meta): short int not supported in PIO")
-             case(PIO_INT)
-
-                ptr2 = LOC(mpp_io_stack(1))
-
-                !call PIO_read_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, ivals, error) !TODO
-                error = PIO_get_var(mpp_file(unit)%fileDesc, field%id, start, axsiz, ivals )
-                call netcdf_err( error, mpp_file(unit), field=field )
-                if(field%scale == 1.0 .and. field%add == 0.0) then
-                   data(:)=ivals(:)
-                else
-                   data(:)=ivals(:)*field%scale + field%add
-                end if
-             case(PIO_REAL)
-                ptr3 = LOC(mpp_io_stack(1))
-                if (size(transfer(rvals(1),one_byte)) .eq. word_sz) then
-                  !call PIO_read_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error) ! TODO
-                  error = PIO_get_var(mpp_file(unit)%fileDesc, field%id, start, axsiz, data )
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale /= 1.0 .or. field%add /= 0.0) then
-                     data(:)=data(:)*field%scale + field%add
-                  end if
-                else
-                  !call PIO_read_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, rvals, error) ! TODO
-                  error = PIO_get_var(mpp_file(unit)%fileDesc, field%id, start, axsiz, rvals )
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale == 1.0 .and. field%add == 0.0) then
-                     data(:)=rvals(:)
-                  else
-                     data(:)=rvals(:)*field%scale + field%add
-                  end if
-                end if
-             case(PIO_DOUBLE)
-                ptr4 = LOC(mpp_io_stack(1))
-                if (size(transfer(r8vals(1),one_byte)) .eq. word_sz) then
-                  !call PIO_read_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, data, error) !TODO
-                  error = PIO_get_var(mpp_file(unit)%fileDesc, field%id, start, axsiz, data )
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale /= 1.0 .or. field%add /= 0.0) then
-                     data(:)=data(:)*field%scale + field%add
-                  end if
-                else
-                  !call PIO_read_darray(mpp_file(unit)%fileDesc, varDesc, field%ioDesc, r8vals, error) !TODO
-                  error = PIO_get_var(mpp_file(unit)%fileDesc, field%id, start, axsiz, r8vals)
-                  call netcdf_err( error, mpp_file(unit), field=field )
-                  if(field%scale == 1.0 .and. field%add == 0.0) then
-                     data(:)=r8vals(:)
-                  else
-                     data(:)=r8vals(:)*field%scale + field%add
-                  end if
-                end if
-             case default
-                call mpp_error( FATAL, 'MPP_READ: invalid pack value' )
-          end select
-      endif
-
-#endif
-
 #else
       call mpp_error( FATAL, 'MPP_READ currently requires use_netCDF option' )
 #endif
@@ -371,23 +229,6 @@
           end if
       endif
       if( verbose )print '(a,2i6,i6,12i4)', 'READ_RECORD: PE, unit, nwords, start, axsiz=', pe, unit, nwords, start, axsiz
-
-#ifdef use_PIO
-      !!! TODO: Fix the below described issue and uncomment mpp_pio_stage_ioDesc call.
-      !!! Commented out staging ioDesc because, apparently, supergrid compute domain partitions are overlapping,
-      !!! i.e., neighboring subgrids share cells, meaning that dof array of different PEs refer to same cells.
-      !!! This appears to cause memory access errors within PIO library. -alper
-
-      !!!if (present(domain))then
-      !!!  call mpp_pio_stage_ioDesc(field%type, domain, field%ioDesc, position, field%ndim,&
-      !!!                            field%time_axis_index, field%size)
-      !!!else
-      !!!    call mpp_error( FATAL, 'Domain is needed to read in fields via PIO.' )
-      !!!endif
-      if (mpp_file(unit)%io_domain_exist) then
-          call mpp_error( FATAL, "io_domain not supported with PIO")
-      endif
-#endif
 
       call READ_RECORD_CORE_(unit, field, nwords, data, start, axsiz)
 

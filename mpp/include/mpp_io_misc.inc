@@ -244,7 +244,11 @@
 #ifndef use_PIO
          if( mpp_file(unit)%opened )error = NF_CLOSE(mpp_file(unit)%ncid)
 #else
-         if( mpp_file(unit)%opened )call PIO_closefile(mpp_file(unit)%fileDesc)
+         if( mpp_file(unit)%action == MPP_RDONLY) then
+            if( mpp_file(unit)%opened )error = NF_CLOSE(mpp_file(unit)%ncid)
+         else
+            if( mpp_file(unit)%opened )call PIO_closefile(mpp_file(unit)%fileDesc)
+         endif
 #endif
       end do
 #endif
@@ -299,7 +303,12 @@
 #ifndef use_PIO
           error = NF_SYNC(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
 #else
-          call PIO_syncfile(mpp_file(unit)%fileDesc)
+         if( mpp_file(unit)%action == MPP_RDONLY) then
+            error = NF_SYNC(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+         else
+            call PIO_syncfile(mpp_file(unit)%fileDesc)
+            if( mpp_file(unit)%opened )call PIO_closefile(mpp_file(unit)%fileDesc)
+         endif
 #endif
 #endif
       else
