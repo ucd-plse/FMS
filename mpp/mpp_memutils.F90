@@ -27,7 +27,7 @@ module mpp_memutils_mod
   public :: mpp_print_memuse_stats, mpp_mem_dump
   public :: mpp_memuse_begin, mpp_memuse_end
 
-  real    :: begin_memuse
+  real(kind=8)    :: begin_memuse
   logical :: memuse_started = .false.
 
 contains
@@ -56,7 +56,7 @@ contains
 
     character(len=*), intent(in) :: text
     integer, intent(in), optional :: unit
-    real    :: m, mmin, mmax, mavg, mstd, end_memuse
+    real(kind=8)    :: m, mmin, mmax, mavg, mstd, end_memuse
     integer :: mu
 #if defined(__sgi) || defined(__aix) || defined(__SX)
     integer :: memuse
@@ -92,7 +92,7 @@ contains
 
     character(len=*), intent(in) :: text
     integer, intent(in), optional :: unit
-    real :: m, mmin, mmax, mavg, mstd
+    real(kind=8) :: m, mmin, mmax, mavg, mstd
     integer :: mu
 !memuse is an external function: works on SGI
 !use #ifdef to generate equivalent on other platforms.
@@ -120,7 +120,7 @@ contains
 
 subroutine mpp_mem_dump ( memuse )
 
-real, intent(out) :: memuse
+real(kind=8), intent(out) :: memuse
 
 ! This routine returns the memory usage on Linux systems.
 ! It does this by querying a system file (file_name below).
