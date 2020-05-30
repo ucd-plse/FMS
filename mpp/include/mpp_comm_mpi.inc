@@ -418,8 +418,8 @@ end subroutine mpp_gsm_free
       integer, intent(in) :: length, from_pe
       integer, intent(in), optional :: pelist(:)
       integer :: n, i, from_rank, out_unit
-      character    :: str1D(length*size(data(:)))
-      pointer(lptr, str1D)
+      !character    :: str1D(length*size(data(:)))
+      !pointer(lptr, str1D)
 
       if( .NOT.module_is_initialized )call mpp_error( FATAL, 'mpp_broadcast_text: You must first call mpp_init.' )
       n = get_peset(pelist); if( peset(n)%count.EQ.1 )return
@@ -444,7 +444,7 @@ end subroutine mpp_gsm_free
              exit
          endif
       enddo
-      lptr = LOC (data)
+      !lptr = LOC (data)
       if( mpp_npes().GT.1 ) call MPI_BCAST( data, length*size(data(:)), MPI_CHARACTER, from_rank, peset(n)%id, error )
       if( debug .and. (current_clock.NE.0) )call increment_current_clock( EVENT_BROADCAST, length )
       return

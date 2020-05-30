@@ -115,14 +115,19 @@ subroutine MPP_GATHER_PELIST_2D_(is, ie, js, je, pelist, array_seg, data, is_roo
    integer,   optional,               intent(in)    :: ishift, jshift
 
    MPP_TYPE_ ::  arr3D(size(array_seg,1),size(array_seg,2),1)
-   MPP_TYPE_ :: data3D(size(     data,1),size(     data,2),1)
+   !MPP_TYPE_ :: data3D(size(     data,1),size(     data,2),1)
+   MPP_TYPE_, dimension(:,:,:), allocatable :: data3D
    pointer( aptr,  arr3D )
-   pointer( dptr, data3D )
+   !pointer( dptr, data3D )
    aptr = LOC(array_seg)
-   dptr = LOC(     data)
+   !dptr = LOC(     data)
 
+   allocate(data3D(size(data,1),size(data,2),1))
+   data3D(:,:,1) = data(:,:)
    call mpp_gather(is, ie, js, je, 1, pelist, arr3D, data3D, is_root_pe, &
                    ishift, jshift)
+   data(:,:) = data3D(:,:,1)
+   deallocate(data3D)
    return
 
 end subroutine MPP_GATHER_PELIST_2D_

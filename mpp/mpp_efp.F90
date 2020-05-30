@@ -23,11 +23,11 @@ use mpp_mod, only : mpp_error, FATAL, WARNING, NOTE
 use mpp_mod, only : mpp_pe, mpp_root_pe, mpp_npes
 use mpp_mod, only : mpp_sum
 
-implicit none ; private
+implicit none !; private
 
 public :: mpp_reproducing_sum, mpp_efp_list_sum_across_PEs
 public :: mpp_efp_plus, mpp_efp_minus, mpp_efp_to_real, mpp_real_to_efp, mpp_efp_real_diff
-public :: operator(+), operator(-), assignment(=)
+!public :: operator(+), operator(-), assignment(=)
 public :: mpp_query_efp_overflow_error, mpp_reset_efp_overlow_error
 
 !   This module provides interfaces to the non-domain-oriented communication

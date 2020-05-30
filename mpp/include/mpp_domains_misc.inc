@@ -57,6 +57,8 @@
       integer(POINTER_KIND) :: ptr_info_var(16)
       pointer( ptr_info, ptr_info_var )
 #endif 
+      namelist /mpp_domains_nml/ debug_update_domain, domain_clocks_on, debug_message_passing, nthread_control_loop, &
+                                 efp_sum_overflow_check, use_alltoallw
 
       if( module_is_initialized )return
       call mpp_init(flags)           !this is a no-op if already initialized
@@ -445,7 +447,7 @@ end subroutine init_nonblock_type
                                                     ! found. default value is false.
 ! some local variables                              
   logical                :: check_success, error_exit
-  real, dimension(:,:), allocatable :: field1, field2
+  real(kind=8), dimension(:,:), allocatable :: field1, field2, field_in_r8
   integer :: i, j, pe, npes, isd,ied,jsd,jed, is, ie, js, je
   type(domain2d) :: domain1, domain2
   
@@ -472,7 +474,8 @@ end subroutine init_nonblock_type
     call mpp_broadcast_domain(domain1)
     call mpp_broadcast_domain(domain2)
     
-    call mpp_redistribute(domain1,field_in,domain2,field1)
+    field_in_r8=field_in
+    call mpp_redistribute(domain1,field_in_r8,domain2,field1)
     
     if(any(pelist2 == pe)) then
         do i =is,ie
