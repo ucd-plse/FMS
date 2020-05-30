@@ -81,7 +81,7 @@
       unit_begin = 103
       unit_end   = 512
       do unit_nml = unit_begin, unit_end
-         inquire( unit_nml,OPENED=opened )
+         inquire( unit=unit_nml,OPENED=opened )
          if( .NOT.opened )exit
       end do
 
@@ -1658,6 +1658,8 @@ end subroutine init_nonblock_type
 #define MPP_TYPE_ real(DOUBLE_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_r8_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_r8_3D_internal_
 #include <mpp_do_redistribute.h>
 #undef  VECTOR_FIELD_
 
@@ -1666,6 +1668,8 @@ end subroutine init_nonblock_type
 #define MPP_TYPE_ complex(DOUBLE_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_c8_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_c8_3D_internal_
 #include <mpp_do_redistribute.h>
 #endif
 
@@ -1674,12 +1678,16 @@ end subroutine init_nonblock_type
 #define MPP_TYPE_ integer(LONG_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_i8_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_i8_3D_internal_
 #include <mpp_do_redistribute.h>
 
 #undef MPP_TYPE_
 #define MPP_TYPE_ logical(LONG_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_l8_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_l8_3D_internal_
 #include <mpp_do_redistribute.h>
 #endif
 
@@ -1688,6 +1696,8 @@ end subroutine init_nonblock_type
 #define MPP_TYPE_ real(FLOAT_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_r4_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_r4_3D_internal_
 #include <mpp_do_redistribute.h>
 #undef  VECTOR_FIELD_
 #endif
@@ -1697,6 +1707,8 @@ end subroutine init_nonblock_type
 #define MPP_TYPE_ complex(FLOAT_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_c4_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_c4_3D_internal_
 #include <mpp_do_redistribute.h>
 #endif
 
@@ -1704,12 +1716,16 @@ end subroutine init_nonblock_type
 #define MPP_TYPE_ integer(INT_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_i4_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_i4_3D_internal_
 #include <mpp_do_redistribute.h>
 
 #undef MPP_TYPE_
 #define MPP_TYPE_ logical(INT_KIND)
 #undef MPP_DO_REDISTRIBUTE_3D_
 #define MPP_DO_REDISTRIBUTE_3D_ mpp_do_redistribute_l4_3D
+#undef MPP_DO_REDISTRIBUTE_3D_internal_
+#define MPP_DO_REDISTRIBUTE_3D_internal_ mpp_do_redistribute_l4_3D_internal_
 #include <mpp_do_redistribute.h>
 
 #undef MPP_TYPE_
@@ -1726,6 +1742,8 @@ end subroutine init_nonblock_type
 #define MPP_GET_BOUNDARY_2D_V_ mpp_get_boundary_r8_2dv
 #undef MPP_GET_BOUNDARY_3D_V_
 #define MPP_GET_BOUNDARY_3D_V_ mpp_get_boundary_r8_3dv
+#undef MPP_GET_BOUNDARY_3D_V_internal_
+#define MPP_GET_BOUNDARY_3D_V_internal_ mpp_get_boundary_r8_3dv_internal_
 !#undef MPP_GET_BOUNDARY_4D_V_
 !#define MPP_GET_BOUNDARY_4D_V_ mpp_get_boundary_r8_4dv
 !#undef MPP_GET_BOUNDARY_5D_V_
@@ -1742,6 +1760,8 @@ end subroutine init_nonblock_type
 #define MPP_GET_BOUNDARY_AD_2D_V_ mpp_get_boundary_ad_r8_2dv
 #undef MPP_GET_BOUNDARY_AD_3D_V_
 #define MPP_GET_BOUNDARY_AD_3D_V_ mpp_get_boundary_ad_r8_3dv
+#undef MPP_GET_BOUNDARY_AD_3D_V_internal_
+#define MPP_GET_BOUNDARY_AD_3D_V_internal_ mpp_get_boundary_ad_r8_3dv_internal_
 #include <mpp_get_boundary_ad.h>
 
 #ifdef OVERLOAD_R4
@@ -1759,6 +1779,8 @@ end subroutine init_nonblock_type
 #define MPP_GET_BOUNDARY_2D_V_ mpp_get_boundary_r4_2dv
 #undef MPP_GET_BOUNDARY_3D_V_
 #define MPP_GET_BOUNDARY_3D_V_ mpp_get_boundary_r4_3dv
+#undef MPP_GET_BOUNDARY_3D_V_internal_
+#define MPP_GET_BOUNDARY_3D_V_internal_ mpp_get_boundary_r4_3dv_internal_
 !#undef MPP_GET_BOUNDARY_4D_V_
 !#define MPP_GET_BOUNDARY_4D_V_ mpp_get_boundary_r4_4dv
 !#undef MPP_GET_BOUNDARY_5D_V_
@@ -1777,6 +1799,8 @@ end subroutine init_nonblock_type
 #define MPP_GET_BOUNDARY_AD_2D_V_ mpp_get_boundary_ad_r4_2dv
 #undef MPP_GET_BOUNDARY_AD_3D_V_
 #define MPP_GET_BOUNDARY_AD_3D_V_ mpp_get_boundary_ad_r4_3dv
+#undef MPP_GET_BOUNDARY_AD_3D_V_internal_
+#define MPP_GET_BOUNDARY_AD_3D_V_internal_ mpp_get_boundary_ad_r4_3dv_internal_
 #include <mpp_get_boundary_ad.h>
 #endif
 

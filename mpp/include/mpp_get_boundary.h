@@ -532,8 +532,26 @@ subroutine MPP_GET_BOUNDARY_3D_V_(fieldx, fieldy, domain, ebufferx, sbufferx, wb
                                   ebuffery, sbuffery, wbuffery, nbuffery, flags, gridtype, &
                                   complete, tile_count)
   type(domain2D),       intent(in)   :: domain
-  MPP_TYPE_,            intent(in)   :: fieldx(domain%x(1)%memory%begin:,domain%y(1)%memory%begin:,:)
-  MPP_TYPE_,            intent(in)   :: fieldy(domain%x(1)%memory%begin:,domain%y(1)%memory%begin:,:)
+  MPP_TYPE_,            intent(in)   :: fieldx(:,:,:)
+  MPP_TYPE_,            intent(in)   :: fieldy(:,:,:)
+  MPP_TYPE_, intent(inout), optional :: ebufferx(:,:), sbufferx(:,:), wbufferx(:,:), nbufferx(:,:)
+  MPP_TYPE_, intent(inout), optional :: ebuffery(:,:), sbuffery(:,:), wbuffery(:,:), nbuffery(:,:)
+  integer,      intent(in), optional :: flags, gridtype, tile_count
+  logical,      intent(in), optional :: complete
+
+  call MPP_GET_BOUNDARY_3D_V_internal_(fieldx, fieldy, domain, ebufferx, sbufferx, wbufferx, nbufferx, &
+        ebuffery, sbuffery, wbuffery, nbuffery, flags, gridtype, &
+        complete, tile_count, domain%x(1)%memory%begin, domain%y(1)%memory%begin)
+
+end subroutine MPP_GET_BOUNDARY_3D_V_
+
+subroutine MPP_GET_BOUNDARY_3D_V_internal_(fieldx, fieldy, domain, ebufferx, sbufferx, wbufferx, nbufferx, &
+                                  ebuffery, sbuffery, wbuffery, nbuffery, flags, gridtype, &
+                                  complete, tile_count, dx1b, dy1b)
+  integer, intent(in) :: dx1b, dy1b
+  type(domain2D),       intent(in)   :: domain
+  MPP_TYPE_,            intent(in)   :: fieldx(dx1b:,dy1b:,:)
+  MPP_TYPE_,            intent(in)   :: fieldy(dx1b:,dy1b:,:)
   MPP_TYPE_, intent(inout), optional :: ebufferx(:,:), sbufferx(:,:), wbufferx(:,:), nbufferx(:,:)
   MPP_TYPE_, intent(inout), optional :: ebuffery(:,:), sbuffery(:,:), wbuffery(:,:), nbuffery(:,:)
   integer,      intent(in), optional :: flags, gridtype, tile_count
@@ -745,5 +763,5 @@ subroutine MPP_GET_BOUNDARY_3D_V_(fieldx, fieldy, domain, ebufferx, sbufferx, wb
      b_addrsx=-9999; b_addrsy=-9999; isize=0;  jsize=0;  ksize=0
   end if
 
-end subroutine MPP_GET_BOUNDARY_3D_V_
+end subroutine MPP_GET_BOUNDARY_3D_V_internal_
 

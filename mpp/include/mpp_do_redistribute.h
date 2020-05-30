@@ -16,15 +16,27 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
+!***********************************************************************
     subroutine MPP_DO_REDISTRIBUTE_3D_( f_in, f_out, d_comm, d_type )
       integer(LONG_KIND), intent(in)         :: f_in(:), f_out(:)
       type(DomainCommunicator2D), intent(in) :: d_comm
       MPP_TYPE_, intent(in)                  :: d_type
-      MPP_TYPE_ :: field_in(d_comm%domain_in%x(1)%data%begin:d_comm%domain_in%x(1)%data%end, &
-                            d_comm%domain_in%y(1)%data%begin:d_comm%domain_in%y(1)%data%end,d_comm%ke)
+
+      call MPP_DO_REDISTRIBUTE_3D_internal_( f_in, f_out, d_comm, d_type,d_comm%domain_in%x(1)%data%begin, &
+        d_comm%domain_in%x(1)%data%end,d_comm%domain_in%y(1)%data%begin,d_comm%domain_in%y(1)%data%end, &
+        d_comm%domain_out%x(1)%data%begin, d_comm%domain_out%x(1)%data%end, d_comm%domain_out%y(1)%data%begin, &
+        d_comm%domain_out%y(1)%data%end, d_comm%ke )
+    end subroutine MPP_DO_REDISTRIBUTE_3D_
+
+    subroutine MPP_DO_REDISTRIBUTE_3D_internal_( f_in, f_out, d_comm, d_type, dinx1b, dinx1e, diny1b, diny1e, &
+                                               doutx1b, doutx1e, douty1b, douty1e,dke)
+      integer(LONG_KIND), intent(in)         :: f_in(:), f_out(:)
+      type(DomainCommunicator2D), intent(in) :: d_comm
+      MPP_TYPE_, intent(in)                  :: d_type
+      integer, intent(in) :: dinx1b, dinx1e, diny1b, diny1e, doutx1b, doutx1e, douty1b, douty1e, dke
+      MPP_TYPE_ :: field_in(dinx1b:dinx1e, diny1b:diny1e, dke)
       pointer( ptr_field_in, field_in)
-      MPP_TYPE_ :: field_out(d_comm%domain_out%x(1)%data%begin:d_comm%domain_out%x(1)%data%end, &
-                             d_comm%domain_out%y(1)%data%begin:d_comm%domain_out%y(1)%data%end,d_comm%ke)
+      MPP_TYPE_ :: field_out(doutx1b:doutx1e, douty1b:douty1e, dke)
       pointer( ptr_field_out, field_out)
       type(domain2D), pointer :: domain_in, domain_out
       integer :: i, j, k, l, n, l_size
@@ -108,4 +120,4 @@
       end do
 
       call mpp_sync_self()
-    end subroutine MPP_DO_REDISTRIBUTE_3D_
+    end subroutine MPP_DO_REDISTRIBUTE_3D_internal_

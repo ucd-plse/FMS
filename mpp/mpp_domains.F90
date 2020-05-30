@@ -164,7 +164,7 @@ module mpp_domains_mod
   use mpp_pset_mod,           only : mpp_pset_init
   use mpp_efp_mod,            only : mpp_reproducing_sum
   implicit none
-  private
+  !private
 
 #if defined(use_libMPI) && !defined(sgi_mipspro)
 #include <mpif.h>
@@ -191,7 +191,7 @@ module mpp_domains_mod
   !--- public interface from mpp_domains_util.h
   public :: mpp_domains_set_stack_size, mpp_get_compute_domain, mpp_get_compute_domains
   public :: mpp_get_data_domain, mpp_get_global_domain, mpp_get_domain_components
-  public :: mpp_get_layout, mpp_get_pelist, operator(.EQ.), operator(.NE.) 
+  public :: mpp_get_layout, mpp_get_pelist!, operator(.EQ.), operator(.NE.) 
   public :: mpp_domain_is_symmetry, mpp_domain_is_initialized
   public :: mpp_get_neighbor_pe, mpp_nullify_domain_list
   public :: mpp_set_compute_domain, mpp_set_data_domain, mpp_set_global_domain
@@ -703,8 +703,8 @@ module mpp_domains_mod
   integer           :: nthread_control_loop = 8
   logical           :: efp_sum_overflow_check = .false.
   logical           :: use_alltoallw = .false.
-  namelist /mpp_domains_nml/ debug_update_domain, domain_clocks_on, debug_message_passing, nthread_control_loop, &
-                             efp_sum_overflow_check, use_alltoallw
+  !namelist /mpp_domains_nml/ debug_update_domain, domain_clocks_on, debug_message_passing, nthread_control_loop, &
+  !                           efp_sum_overflow_check, use_alltoallw
 
   !***********************************************************************
 
