@@ -40,11 +40,14 @@ real :: realnumber !< dummy variable to use in HUGE initializations
 #ifdef GFS_PHYS
 ! SJL: the following are from fv3_gfsphysics/gfs_physics/physics/physcons.f90
 real,               public, parameter :: RADIUS = 6.3712e+6_r8_kind           !< Radius of the Earth [m]
-real(kind=r8_kind), public, parameter :: PI_8   = 3.1415926535897931_r8_kind  !< Ratio of circle circumference to diameter [N/A]
-real,               public, parameter :: PI     = 3.1415926535897931_r8_kind  !< Ratio of circle circumference to diameter [N/A] (REAL(KIND=8))
+real(kind=r8_kind), public, parameter :: PI_8   = 3.1415926535897931_r8_kind  !< Ratio of circle circumference to 
+                                                                              !!diameter [N/A]
+real,               public, parameter :: PI     = 3.1415926535897931_r8_kind  !< Ratio of circle circumference to 
+                                                                              !!diameter [N/A] (REAL(KIND=8))
 real,               public, parameter :: OMEGA  = 7.2921e-5_r8_kind   !< Rotation rate of the Earth [1/s]
 real,               public, parameter :: GRAV   = 9.80665_r8_kind     !< Acceleration due to gravity [m/s^2]
-real(kind=r8_kind), public, parameter :: GRAV_8 = 9.80665_r8_kind     !< Acceleration due to gravity [m/s^2] (REAL(KIND=8))
+real(kind=r8_kind), public, parameter :: GRAV_8 = 9.80665_r8_kind     !< Acceleration due to gravity [m/s^2]
+                                                                      !!(REAL(KIND=8))
 real,               public, parameter :: RDGAS  = 287.05_r8_kind      !< Gas constant for dry air [J/kg/deg]
 real,               public, parameter :: RVGAS  = 461.50_r8_kind      !< Gas constant for water vapor [J/kg/deg]
 ! Extra:
@@ -52,7 +55,8 @@ real,               public, parameter :: HLV      = 2.5e6_r8_kind     !< Latent 
 real,               public, parameter :: HLF      = 3.3358e5_r8_kind  !< Latent heat of fusion [J/kg]
 real,               public, parameter :: con_cliq = 4.1855e+3_r8_kind !< spec heat H2O liq [J/kg/K]
 real,               public, parameter :: con_csol = 2.1060e+3_r8_kind !< spec heat H2O ice [J/kg/K]
-real,               public, parameter :: CP_AIR = 1004.6_r8_kind      !< Specific heat capacity of dry air at constant pressure [J/kg/deg]
+real,               public, parameter :: CP_AIR = 1004.6_r8_kind      !< Specific heat capacity of dry air at constant
+                                                                      !!pressure [J/kg/deg]
 real,               public, parameter :: KAPPA  = RDGAS/CP_AIR        !< RDGAS / CP_AIR [dimensionless]
 real,               public, parameter :: TFREEZE = 273.15_r8_kind     !< Freezing temperature of fresh water [K]
 #else
@@ -80,7 +84,8 @@ real,         public, parameter :: RVGAS  = 461.50_r8_kind           !< Gas cons
 real,         public, parameter :: HLV = 2.500e6_r8_kind             !< Latent heat of evaporation [J/kg]
 real,         public, parameter :: HLF = 3.34e5_r8_kind              !< Latent heat of fusion [J/kg]
 real,         public, parameter :: KAPPA  = 2.0_r8_kind/7.0_r8_kind  !< RDGAS / CP_AIR [dimensionless]
-real,         public, parameter :: CP_AIR = RDGAS/KAPPA              !< Specific heat capacity of dry air at constant pressure [J/kg/deg]
+real,         public, parameter :: CP_AIR = RDGAS/KAPPA              !< Specific heat capacity of dry air at constant
+                                                                     !! pressure [J/kg/deg]
 real,         public, parameter :: TFREEZE = 273.16_r8_kind          !< Freezing temperature of fresh water [K]
 #endif
 

@@ -35,6 +35,7 @@
   integer                       :: unit_begin, unit_end, unit_nml, io_status
   character(len=5) :: this_pe
   type(mpp_type), pointer :: dtype
+  namelist /mpp_nml/ etc_unit_is_stderr, request_multiply, mpp_record_timing_data, sync_all_clocks
 
   if( module_is_initialized )return
 
@@ -112,7 +113,7 @@
   unit_begin = 103
   unit_end   = 512
   do unit_nml = unit_begin, unit_end
-     inquire( unit_nml,OPENED=opened )
+     inquire( unit=unit_nml,OPENED=opened )
      if( .NOT.opened )exit
   end do
 
@@ -219,8 +220,8 @@ end subroutine mpp_init
   !to be called at the end of a run
 subroutine mpp_exit()
   integer :: i, j, k, n, nmax, istat, out_unit, log_unit
-  real    :: t, tmin, tmax, tavg, tstd
-  real    :: m, mmin, mmax, mavg, mstd, t_total
+  real(kind=8)    :: t, tmin, tmax, tavg, tstd
+  real(kind=8)    :: m, mmin, mmax, mavg, mstd, t_total
   logical :: opened
   type(mpp_type), pointer :: dtype
 

@@ -1200,7 +1200,8 @@ private
   !     Integer checksums on FP data use the F90 <TT>TRANSFER()</TT>
   !     intrinsic.
   !
-  !     The <LINK SRC="http://www.gfdl.noaa.gov/fms-cgi-bin/cvsweb.cgi/FMS/shared/chksum/chksum.html">serial checksum module</LINK> is superseded
+  !     The <LINK SRC="http://www.gfdl.noaa.gov/fms-cgi-bin/cvsweb.cgi/FMS/shared/chksum/chksum.html">
+  !        serial checksum module</LINK> is superseded
   !     by this function, and is no longer being actively maintained. This
   !     provides identical results on a single-processor job, and to perform
   !     serial checksums on a single processor of a parallel job, you only
@@ -1389,7 +1390,7 @@ private
   logical :: etc_unit_is_stderr = .false.
   integer :: max_request = 0
   logical :: sync_all_clocks = .false.
-  namelist /mpp_nml/ etc_unit_is_stderr, request_multiply, mpp_record_timing_data, sync_all_clocks
+  !namelist /mpp_nml/ etc_unit_is_stderr, request_multiply, mpp_record_timing_data, sync_all_clocks
 
   contains
 #include <system_clock.h>
