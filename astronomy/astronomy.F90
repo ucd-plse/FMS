@@ -61,12 +61,13 @@ use fms_mod,           only: open_namelist_file, fms_init, &
                              file_exist, write_version_number, &
                              check_nml_error, error_mesg, &
                              FATAL, NOTE, WARNING, close_file
-use time_manager_mod,  only: time_type, set_time, get_time, &
-                             get_date_julian, set_date_julian, &
-                             set_date, length_of_year, &
-                             time_manager_init, &
-                             operator(-), operator(+), &
-                             operator( // ), operator(<)
+use time_manager_mod!,  only: time_type, set_time, get_time, &
+                    !         get_date_julian, set_date_julian, &
+                    !         set_date, length_of_year, &
+                    !         time_manager_init, &
+                    !         operator(-), operator(+), &
+                    !         operator( // ), operator(<)
+use time_manager_mod,  only: tmm_seconds_per_day => seconds_per_day
 use constants_mod,     only: constants_init, PI
 use mpp_mod,           only: input_nml_file
 
@@ -358,10 +359,10 @@ integer :: num_angles = 3600 !< Number of intervals into which the year
                              !! is divided to compute orbital positions
 
 
-namelist /astronomy_nml/ ecc, obliq, per, period, &
-                         year_ae, month_ae,  day_ae,         &
-                         hour_ae, minute_ae, second_ae, &
-                         num_angles
+!namelist /astronomy_nml/ ecc, obliq, per, period, &
+!                         year_ae, month_ae,  day_ae,         &
+!                         hour_ae, minute_ae, second_ae, &
+!                         num_angles
 
 !--------------------------------------------------------------------
 !------   public data ----------
@@ -426,6 +427,10 @@ real, dimension(:,:), intent(in), optional :: lonb !< 2d array of model longitud
 !  local variables:
 !-------------------------------------------------------------------
 integer :: unit, ierr, io, seconds, days, jd, id
+namelist /astronomy_nml/ ecc, obliq, per, period, &
+                         year_ae, month_ae,  day_ae,         &
+                         hour_ae, minute_ae, second_ae, &
+                         num_angles
 
 !-------------------------------------------------------------------
 !    if module has already been initialized, exit.

@@ -95,15 +95,15 @@ use constants_mod, only: rseconds_per_day=>seconds_per_day
 use fms_mod, only: error_mesg, FATAL, WARNING, write_version_number, stdout
 
 implicit none
-private
+!private
 
 ! Module defines a single type
 public time_type
 
 ! Operators defined on time_type
-public operator(+),  operator(-),   operator(*),   operator(/),  &
-       operator(>),  operator(>=),  operator(==),  operator(/=), &
-       operator(<),  operator(<=),  operator(//),  assignment(=)
+!public operator(+),  operator(-),   operator(*),   operator(/),  &
+!       operator(>),  operator(>=),  operator(==),  operator(/=), &
+!       operator(<),  operator(<=),  operator(//),  assignment(=)
 
 ! Subroutines and functions operating on time_type
 public set_time, increment_time, decrement_time, get_time, interval_alarm
@@ -203,6 +203,10 @@ end interface
 ! Include variable "version" to be written to log file.
 #include<file_version.h>
 logical :: module_is_initialized = .false.
+
+private version
+private module_is_initialized
+private error_handler
 
 !======================================================================
 
@@ -3304,7 +3308,7 @@ end function date_to_string
 !! \brief This routine converts the integer t%days to a string
 subroutine time_list_error (T,Terr)
   type(time_type),  intent(in)            :: t     !< time_type input
-  character(len=:),   allocatable         :: terr  !< String holding the t%days
+  character(len=*),   allocatable         :: terr  !< String holding the t%days
 !> Allocate the string
   allocate (character(len=10) :: terr)
 !> Write the integer to the string

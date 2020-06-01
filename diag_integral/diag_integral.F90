@@ -95,11 +95,11 @@
 !! - format_data_init
 !!
 
-use time_manager_mod, only:  time_type, get_time, set_time,  &
-                             time_manager_init, &
-                             operator(+),  operator(-),      &
-                             operator(==), operator(>=),     &
-                             operator(/=)
+use time_manager_mod!, only:  time_type, get_time, set_time,  &
+                    !         time_manager_init, &
+                    !         operator(+),  operator(-),      &
+                    !         operator(==), operator(>=),     &
+                    !         operator(/=)
 use mpp_mod,          only:  input_nml_file
 use fms_mod,          only:  open_file, file_exist, error_mesg, &
                              open_namelist_file, check_nml_error, &
@@ -217,10 +217,10 @@ integer             ::    &
                                    ! of output
 
 
-namelist / diag_integral_nml /      &
-                                output_interval, time_units,  &
-                                file_name, print_header, &
-                                fields_per_print_line
+!namelist / diag_integral_nml /      &
+!                                output_interval, time_units,  &
+!                                file_name, print_header, &
+!                                fields_per_print_line
 
 !-------------------------------------------------------------------------------
 !------- public data ------
@@ -351,6 +351,10 @@ real,dimension(:,:), intent(in), optional :: blon, blat, area_in
       integer :: unit, io, ierr, nc, logunit
       integer :: field_size_local
       real    :: sum_area_local
+      namelist / diag_integral_nml /      &
+                                output_interval, time_units,  &
+                                file_name, print_header, &
+                                fields_per_print_line
 
 !-------------------------------------------------------------------------------
 !    if routine has already been executed, exit.

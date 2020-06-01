@@ -30,10 +30,10 @@ use          fms_mod, only: error_mesg, FATAL, write_version_number, lowercase, 
                             open_namelist_file, check_nml_error, stdlog, close_file, &
                             mpp_pe, mpp_root_pe
 
-use time_manager_mod, only: time_type, operator(+), operator(-), set_time, get_time, &
-                            NO_CALENDAR, THIRTY_DAY_MONTHS, NOLEAP, JULIAN, GREGORIAN, &
-                            set_calendar_type, get_calendar_type, set_date, &
-                            get_date, days_in_month, valid_calendar_types
+use time_manager_mod!, only: time_type, operator(+), operator(-), set_time, get_time, &
+                    !        NO_CALENDAR, THIRTY_DAY_MONTHS, NOLEAP, JULIAN, GREGORIAN, &
+                    !        set_calendar_type, get_calendar_type, set_date, &
+                    !        get_date, days_in_month, valid_calendar_types
 use mpp_mod,          only: input_nml_file
 
 implicit none
@@ -54,7 +54,7 @@ logical :: module_is_initialized=.false. ! This module is initialized on
 
 logical :: allow_calendar_conversion=.true.
 
-namelist / get_cal_time_nml / allow_calendar_conversion
+!namelist / get_cal_time_nml / allow_calendar_conversion
 ! </NAMELIST>
 
 ! Include variable "version" to be written to log file.
@@ -181,6 +181,7 @@ character(len=4) :: formt='(i )'
 type(time_type) :: base_time, base_time_plus_one_yr, base_time_plus_one_mo
 real :: dt
 logical :: permit_conversion_local
+namelist / get_cal_time_nml / allow_calendar_conversion
 
 if(.not.module_is_initialized) then
 #ifdef INTERNAL_FILE_NML
@@ -208,7 +209,7 @@ else
   permit_conversion_local = allow_calendar_conversion
 endif
 
-calendar_in_c = lowercase(trim(cut0(calendar)))
+calendar_in_c = lowercase(trim(cut0_this(calendar)))
 
 correct_form = (trim(calendar_in_c)) == 'noleap'     .or. (trim(calendar_in_c)) == '365_day' .or. &
                (trim(calendar_in_c)) == '360_day'    .or. (trim(calendar_in_c)) == 'julian'  .or. &
@@ -360,20 +361,20 @@ endif
 end function get_cal_time
 ! </FUNCTION>
 !------------------------------------------------------------------------
-function cut0(string)
-character(len=256) :: cut0
+function cut0_this(string)
+character(len=256) :: cut0_this
 character(len=*), intent(in) :: string
 integer :: i
 
-cut0 = string
+cut0_this = string
 
 do i=1,len(string)
   if(ichar(string(i:i)) == 0 ) then
-    cut0(i:i) = ' '
+    cut0_this(i:i) = ' '
   endif
 enddo
 
 return
-end function cut0
+end function cut0_this
 !------------------------------------------------------------------------
 end module get_cal_time_mod
