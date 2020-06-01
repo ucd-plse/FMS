@@ -60,7 +60,7 @@ end interface
    real,    dimension(:,:), pointer   :: area_src =>NULL()              !area of the source grid
    real,    dimension(:,:), pointer   :: area_dst =>NULL()              !area of the destination grid
    real,    dimension(:,:,:), pointer :: wti =>NULL(),wtj =>NULL()      !weights for bilinear interpolation
-                                                                        !wti ist used for derivative "weights" in bicubic
+                                                                        !wti ist used for derivative "weights" in bicub
    integer, dimension(:,:,:), pointer :: i_lon =>NULL(), j_lat =>NULL() !indices for bilinear interpolation
                                                                         !and spherical regrid
    real,    dimension(:,:,:), pointer :: src_dist =>NULL()              !distance between destination grid and
@@ -77,12 +77,15 @@ end interface
                                                             !=3, spherical regrid
                                                             !=4, bicubic regrid
    real,    dimension(:,:), pointer   :: rat_x =>NULL(), rat_y =>NULL() !the ratio of coordinates of the dest grid
-                                                                        ! (x_dest -x_src_r)/(x_src_l -x_src_r) and (y_dest -y_src_r)/(y_src_l -y_src_r)
+                                                                        ! (x_dest -x_src_r)/(x_src_l -x_src_r) and 
+                                                                        ! (y_dest -y_src_r)/(y_src_l -y_src_r)
    real,    dimension(:), pointer     :: lon_in =>NULL(),  lat_in =>NULL()  !the coordinates of the source grid
    logical                            :: I_am_initialized=.false.
-   integer                            :: version                            !indicate conservative interpolation version with value 1 or 2
+   integer                            :: version                            !indicate conservative interpolation
+                                                                            ! versionwith value 1 or 2
    !--- The following are for conservative interpolation scheme version 2 ( through xgrid)
-   integer                            :: nxgrid                             !number of exchange grid between src and dst grid.
+   integer                            :: nxgrid                             !number of exchange grid between src and 
+                                                                            !dst grid.
    integer, dimension(:), pointer     :: i_src=>NULL(), j_src=>NULL()       !indices in source grid.
    integer, dimension(:), pointer     :: i_dst=>NULL(), j_dst=>NULL()       !indices in destination grid.
    real,    dimension(:), pointer     :: area_frac_dst=>NULL()              !area fraction in destination grid.
@@ -163,7 +166,7 @@ contains
 
  end subroutine stats
 
-!#################################################################################################################################
+!################################################################################################################
  subroutine horiz_interp_type_eq(horiz_interp_out, horiz_interp_in)
     type(horiz_interp_type), intent(inout) :: horiz_interp_out
     type(horiz_interp_type), intent(in)    :: horiz_interp_in
@@ -207,6 +210,6 @@ contains
     end if
 
  end subroutine horiz_interp_type_eq
-!#################################################################################################################################
+!#################################################################################################################
 
 end module horiz_interp_type_mod

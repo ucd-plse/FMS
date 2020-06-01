@@ -93,9 +93,9 @@ real    :: zeta_trans     = 0.5
 logical :: new_mo_option  = .false.
 
 
-namelist /monin_obukhov_nml/ rich_crit, neutral, drag_min_heat, &
-                             drag_min_moist, drag_min_mom,      &
-                             stable_option, zeta_trans, new_mo_option !miz
+!namelist /monin_obukhov_nml/ rich_crit, neutral, drag_min_heat, &
+!                             drag_min_moist, drag_min_mom,      &
+!                             stable_option, zeta_trans, new_mo_option !miz
 
 !=======================================================================
 
@@ -114,6 +114,9 @@ contains
 subroutine monin_obukhov_init
 
 integer :: unit, ierr, io, logunit
+namelist /monin_obukhov_nml/ rich_crit, neutral, drag_min_heat, &
+                             drag_min_moist, drag_min_mom,      &
+                             stable_option, zeta_trans, new_mo_option !miz
 
 !------------------- read namelist input -------------------------------
 

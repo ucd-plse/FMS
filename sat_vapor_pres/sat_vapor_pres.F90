@@ -541,10 +541,10 @@ private
  logical :: construct_table_wrt_liq = .false.
  logical :: construct_table_wrt_liq_and_ice = .false.
 
- namelist / sat_vapor_pres_nml / show_bad_value_count_by_slice, show_all_bad_values, &
-                                 use_exact_qs, do_simple, &
-                                 construct_table_wrt_liq, &
-                                 construct_table_wrt_liq_and_ice
+ !namelist / sat_vapor_pres_nml / show_bad_value_count_by_slice, show_all_bad_values, &
+ !                                use_exact_qs, do_simple, &
+ !                                construct_table_wrt_liq, &
+ !                                construct_table_wrt_liq_and_ice
 
 contains
 
@@ -2309,6 +2309,10 @@ real,  intent(in),              optional :: hc
   character(len=*), intent(out), optional :: err_msg
   character(len=128) :: err_msg_local
   integer :: unit, ierr, io
+ namelist / sat_vapor_pres_nml / show_bad_value_count_by_slice, show_all_bad_values, &
+                                 use_exact_qs, do_simple, &
+                                 construct_table_wrt_liq, &
+                                 construct_table_wrt_liq_and_ice
 
 ! return silently if this routine has already been called
   if (module_is_initialized) return

@@ -163,7 +163,7 @@ integer, dimension(400,12,31) :: date_to_day              ! Used only for gregor
 integer, parameter :: invalid_date=-1                     ! Used only for gregorian
 
 ! time_type is implemented as seconds and days to allow for larger intervals
-type time_type
+type :: time_type
    private
    integer:: seconds
    integer:: days

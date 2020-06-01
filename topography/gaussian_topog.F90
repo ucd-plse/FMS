@@ -86,7 +86,7 @@ public :: gaussian_topog_init, get_gaussian_topog
    real, dimension(maxmts) ::  rlon  = 0.
    real, dimension(maxmts) ::  rlat  = 0.
 
-   namelist /gaussian_topog_nml/ height, olon, olat, wlon, wlat, rlon, rlat
+   !namelist /gaussian_topog_nml/ height, olon, olat, wlon, wlat, rlon, rlat
 ! </NAMELIST>
 
 !-----------------------------------------------------------------------
@@ -263,6 +263,7 @@ subroutine read_namelist
 
    integer :: unit, ierr, io
    real    :: dtr
+   namelist /gaussian_topog_nml/ height, olon, olat, wlon, wlat, rlon, rlat
 
 !  read namelist
 

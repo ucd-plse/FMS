@@ -75,7 +75,7 @@ module horiz_interp_spherical_mod
   !</NAMELIST>
 
   character(len=32) :: search_method = "radial_search" ! or "full_search"
-  namelist /horiz_interp_spherical_nml/ search_method
+  !namelist /horiz_interp_spherical_nml/ search_method
 
   !-----------------------------------------------------------------------
   ! Include variable "version" to be written to log file.
@@ -95,6 +95,7 @@ contains
 
   subroutine horiz_interp_spherical_init
     integer :: unit, ierr, io
+    namelist /horiz_interp_spherical_nml/ search_method
 
 
     if(module_is_initialized) return

@@ -72,7 +72,7 @@ MODULE diag_grid_mod
   USE fms_mod, ONLY: write_version_number, error_mesg, WARNING, FATAL,&
        & mpp_pe
   USE mpp_mod, ONLY: mpp_root_pe, mpp_npes, mpp_max, mpp_min
-  USE mpp_domains_mod, ONLY: domain2d, mpp_get_tile_id,&
+  USE mpp_domains_mod, ONLY: domain2D, mpp_get_tile_id,&
        & mpp_get_ntile_count, mpp_get_compute_domains
 
   IMPLICIT NONE
