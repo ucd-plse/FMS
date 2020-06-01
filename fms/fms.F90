@@ -293,10 +293,10 @@ integer, public :: clock_flag_default
 !   </DATA>
 ! </NAMELIST>
 
-  namelist /fms_nml/  read_all_pe, clock_grain, clock_flags,    &
-                      warning_level, iospec_ieee32, &
-                      stack_size, domains_stack_size, &
-                      print_memory_usage
+  !namelist /fms_nml/  read_all_pe, clock_grain, clock_flags,    &
+  !                    warning_level, iospec_ieee32, &
+  !                    stack_size, domains_stack_size, &
+  !                    print_memory_usage
 
 !   ---- private data for check_nml_error ----
 
@@ -352,6 +352,10 @@ contains
 subroutine fms_init (localcomm )
  integer, intent(in), optional :: localcomm
  integer :: unit, ierr, io
+  namelist /fms_nml/  read_all_pe, clock_grain, clock_flags,    &
+                      warning_level, iospec_ieee32, &
+                      stack_size, domains_stack_size, &
+                      print_memory_usage
 
     if (module_is_initialized) return    ! return silently if already called
     module_is_initialized = .true.

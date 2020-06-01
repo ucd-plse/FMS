@@ -4779,12 +4779,14 @@ subroutine write_data_4d_new(filename, fieldname, data, domain,    &
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:,:,:), intent(in)         :: data
   !real, dimension(size(data,1),size(data,2),size(data,3)*size(data,4)) :: data_3d
-  real :: data_3d(size(data,1),size(data,2),size(data,3)*size(data,4))
+  real,allocatable, dimension(:,:,:) :: data_3d
   real, intent(in), optional                   :: data_default
   type(domain2d), intent(in), optional         :: domain
   logical, intent(in), optional                :: no_domain
   integer, intent(in), optional                :: position, tile_count
   integer                                      :: i, k, l
+  real, allocatable, dimension(:,:,:) :: xxx
+  allocate(data_3d(size(data,1),size(data,2),size(data,3)*size(data,4)))
 
   if(.not.module_is_initialized) call mpp_error(FATAL,'fms_io(write_data_4d_new):need to call fms_io_init first')
   i = 0
@@ -4796,6 +4798,7 @@ subroutine write_data_4d_new(filename, fieldname, data, domain,    &
   call write_data_3d_new(filename, fieldname, data_3d, domain, &
                          no_domain, .false., position, tile_count, data_default)
 
+  deallocate(data_3d)
 end subroutine write_data_4d_new
 
 !.....................................................................
@@ -4805,11 +4808,12 @@ subroutine write_data_2d_new(filename, fieldname, data, domain,    &
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:), intent(in)             :: data
   !real, dimension(size(data,1),size(data,2),1) :: data_3d
-  real :: data_3d(size(data,1),size(data,2),1)
+  real, allocatable, dimension(:,:,:) :: data_3d
   real, intent(in), optional                   :: data_default
   type(domain2d), intent(in), optional         :: domain
   logical, intent(in), optional                :: no_domain
   integer, intent(in), optional                :: position, tile_count
+  allocate(data_3d(size(data,1),size(data,2),1))
 
   if(.not.module_is_initialized) call mpp_error(FATAL,'fms_io(write_data_2d_new):need to call fms_io_init first')
   data_3d(:,:,1) = data(:,:)
@@ -4817,6 +4821,7 @@ subroutine write_data_2d_new(filename, fieldname, data, domain,    &
   call write_data_3d_new(filename, fieldname, data_3d, domain, &
                          no_domain, .false., position, tile_count, data_default)
 
+  deallocate(data_3d)
 end subroutine write_data_2d_new
 
 ! ........................................................
@@ -4827,15 +4832,17 @@ subroutine write_data_1d_new(filename, fieldname, data,domain, &
   character(len=*), intent(in)           :: filename, fieldname
   real, dimension(:), intent(in)         :: data
   !real, dimension(size(data(:)),1,1)     :: data_3d
-  real     :: data_3d(size(data(:)),1,1)
+  real, allocatable, dimension(:,:,:)     :: data_3d
   real, intent(in), optional             :: data_default
   logical, intent(in), optional          :: no_domain
   integer, intent(in), optional          :: tile_count
+  allocate(data_3d(size(data(:)),1,1))
 
   if(.not.module_is_initialized) call mpp_error(FATAL,'fms_io(write_data_1d_new): module not initialized')
   data_3d(:,1,1) = data(:)
   call write_data_3d_new(filename, fieldname, data_3d,domain,   &
                          no_domain=no_domain, scalar_or_1d=.true., tile_count=tile_count, data_default=data_default)
+  deallocate(data_3d)
 end subroutine write_data_1d_new
 
 ! ..........................................................
@@ -5275,11 +5282,13 @@ subroutine read_data_i3d_new(filename,fieldname,data,domain,timelevel, &
   integer, intent(in) ,         optional   :: position, tile_count
 
   !real, dimension(size(data,1),size(data,2),size(data,3)) :: r_data
-  real :: r_data(size(data,1),size(data,2),size(data,3))
+  real, allocatable, dimension(:,:,:) :: r_data
+  allocate(r_data(size(data,1),size(data,2),size(data,3)))
   r_data = 0
   call read_data_3d_new(filename,fieldname,r_data,domain,timelevel, &
                         no_domain, .false., position, tile_count)
   data = CEILING(r_data)
+  deallocate(r_data)
 end subroutine read_data_i3d_new
 
 subroutine read_data_i2d_new(filename,fieldname,data,domain,timelevel, &
@@ -5291,12 +5300,14 @@ subroutine read_data_i2d_new(filename,fieldname,data,domain,timelevel, &
   logical, intent(in),        optional   :: no_domain
   integer, intent(in) ,       optional   :: position, tile_count
   !real, dimension(size(data,1),size(data,2)) :: r_data
-  real :: r_data(size(data,1),size(data,2))
+  real, allocatable, dimension(:,:) :: r_data
+  allocate(r_data(size(data,1),size(data,2)))
 
   r_data = 0
   call read_data_2d_new(filename,fieldname,r_data,domain,timelevel, &
                         no_domain, position, tile_count)
   data = CEILING(r_data)
+  deallocate(r_data)
 end subroutine read_data_i2d_new
 !.....................................................................
 subroutine read_data_i1d_new(filename,fieldname,data,domain,timelevel, &
@@ -5309,11 +5320,13 @@ subroutine read_data_i1d_new(filename,fieldname,data,domain,timelevel, &
   integer, intent(in), optional          :: tile_count
 
   !real, dimension(size(data,1))        :: r_data
-  real        :: r_data(size(data,1))
+  real, allocatable, dimension(:)        :: r_data
+  allocate(r_data(size(data,1)))
 
   call read_data_1d_new(filename,fieldname,r_data,domain,timelevel, &
                         no_domain, tile_count)
   data = CEILING(r_data)
+  deallocate(r_data)
 end subroutine read_data_i1d_new
 !.....................................................................
 subroutine read_data_iscalar_new(filename,fieldname,data,domain,timelevel, &
@@ -5462,11 +5475,13 @@ subroutine read_compressed_i1d(filename,fieldname,data,domain,timelevel,start,nr
   integer, intent(in) , optional         :: start(:), nread(:)
   integer, intent(in) , optional         :: threading
   !real, dimension(size(data))        :: r_data
-  real        :: r_data(size(data))
+  real, allocatable, dimension(:)        :: r_data
+  allocate(r_data(size(data)))
 
   r_data = 0.0
   call read_compressed_1d(filename,fieldname,r_data,domain,timelevel,start,nread,threading)
   data = CEILING(r_data)
+  deallocate(r_data)
 end subroutine read_compressed_i1d
 !.....................................................................
 subroutine read_compressed_i2d(filename,fieldname,data,domain,timelevel,start,nread,threading)
@@ -5477,27 +5492,31 @@ subroutine read_compressed_i2d(filename,fieldname,data,domain,timelevel,start,nr
   integer, intent(in) , optional         :: start(:), nread(:)
   integer, intent(in) , optional         :: threading
   !real, dimension(size(data,1),size(data,2)) :: r_data
-  real  :: r_data(size(data,1),size(data,2))
+  real, allocatable, dimension(:,:)  :: r_data
+  allocate(r_data(size(data,1),size(data,2)))
 
   r_data = 0.0
   call read_compressed_2d(filename,fieldname,r_data,domain,timelevel,start,nread,threading)
   data = CEILING(r_data)
+  deallocate(r_data)
 end subroutine read_compressed_i2d
 !.....................................................................
 subroutine read_compressed_1d(filename,fieldname,data,domain,timelevel,start,nread,threading)
   character(len=*), intent(in)           :: filename, fieldname
   real, dimension(:), intent(inout)      :: data     !1 dimensional data
   !real, dimension(size(data,1),1)        :: data_2d
-  real        :: data_2d(size(data,1),1)
+  real, allocatable, dimension(:,:)        :: data_2d
   type(domain2d), intent(in), optional   :: domain
   integer, intent(in) , optional         :: timelevel
   integer, intent(in) , optional         :: start(:), nread(:)
   integer, intent(in) , optional         :: threading
-#ifdef use_CRI_pointers
-  pointer( p, data_2d )
-  p = LOC(data)
-#endif
+!#ifdef use_CRI_pointers
+!  pointer( p, data_2d )
+!  p = LOC(data)
+!#endif
+  allocate(data_2d(size(data,1),1))
   call read_compressed_2d(filename,fieldname,data_2d,domain,timelevel,start,nread,threading)
+  deallocate(data_2d)
 end subroutine read_compressed_1d
 !.....................................................................
 subroutine read_compressed_2d(filename,fieldname,data,domain,timelevel,start,nread,threading)
@@ -5635,12 +5654,16 @@ subroutine read_distributed_r3D(unit,fmt,iostat,data)
   integer, intent(out)              :: iostat
   real, dimension(:,:,:), intent(inout) :: data
 
-  real :: data1D(size(data))
-  pointer(ptr,data1D)
+  !real :: data1D(size(data))
+  !pointer(ptr,data1D)
+  real, allocatable, dimension(:) :: data1D
+  allocate(data1D(size(data)))
 
   if(.not.module_is_initialized) call mpp_error(FATAL,'fms_io(read_distributed_r5D):  module not initialized')
-  ptr = LOC(data)
+  !ptr = LOC(data)
   call read_distributed(unit,fmt,iostat,data1D)
+  data = reshape(data1D, [size(data,1), size(data,2), size(data,3)] )
+  deallocate(data1D)
 end subroutine read_distributed_r3D
 
 !.....................................................................
@@ -5650,12 +5673,15 @@ subroutine read_distributed_r5D(unit,fmt,iostat,data)
   integer, intent(out)              :: iostat
   real, dimension(:,:,:,:,:), intent(inout) :: data
 
-  real :: data1D(size(data))
-  pointer(ptr,data1D)
+  !real :: data1D(size(data))
+  !pointer(ptr,data1D)
+  real, allocatable, dimension(:) :: data1D
 
   if(.not.module_is_initialized) call mpp_error(FATAL,'fms_io(read_distributed_r5D):  module not initialized')
-  ptr = LOC(data)
+  !ptr = LOC(data)
   call read_distributed(unit,fmt,iostat,data1D)
+  data = reshape(data1D, [size(data,1), size(data,2), size(data,3), size(data,4), size(data,5)] )
+  deallocate(data1D)
 end subroutine read_distributed_r5D
 
 !.....................................................................
@@ -5912,7 +5938,7 @@ subroutine read_data_4d_new(filename,fieldname,data,domain,timelevel,&
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:,:,:), intent(inout)      :: data     !2 dimensional data
   !real, dimension(size(data,1),size(data,2),size(data,3)*size(data,4)) :: data_3d
-  real :: data_3d(size(data,1),size(data,2),size(data,3)*size(data,4))
+  real, allocatable, dimension(:,:,:) :: data_3d
   type(domain2d), intent(in), optional         :: domain
   integer, intent(in) , optional               :: timelevel
   logical, intent(in), optional                :: no_domain
@@ -5923,6 +5949,7 @@ subroutine read_data_4d_new(filename,fieldname,data,domain,timelevel,&
   integer                                      :: isg,ieg,jsg,jeg
   integer                                      :: xsize_c,ysize_c,xsize_d,ysize_d
   integer                                      :: xsize_g,ysize_g, ishift, jshift
+  allocate(data_3d(size(data,1),size(data,2),size(data,3)*size(data,4)))
 
 !#ifdef use_CRI_pointers
 !  pointer( p, data_3d )
@@ -5967,6 +5994,8 @@ subroutine read_data_4d_new(filename,fieldname,data,domain,timelevel,&
      enddo ; enddo
   endif
 
+  deallocate(data_3d)
+
 end subroutine read_data_4d_new
 
 subroutine read_data_2d_UG(filename,fieldname,data,SG_domain,UG_domain,timelevel)
@@ -5991,7 +6020,7 @@ subroutine read_data_2d_new(filename,fieldname,data,domain,timelevel,&
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:), intent(inout)          :: data     !2 dimensional data
   !real, dimension(size(data,1),size(data,2),1) :: data_3d
-  real :: data_3d(size(data,1),size(data,2),1)
+  real, allocatable, dimension(:,:,:) :: data_3d
   type(domain2d), intent(in), optional         :: domain
   integer, intent(in) , optional               :: timelevel
   logical, intent(in), optional                :: no_domain
@@ -6007,6 +6036,8 @@ subroutine read_data_2d_new(filename,fieldname,data,domain,timelevel,&
 !  pointer( p, data_3d )
 !  p = LOC(data)
 !#endif
+
+  allocate(data_3d(size(data,1),size(data,2),1))
 
   call read_data_3d_new(filename,fieldname,data_3d,domain,timelevel,&
                         no_domain,.false., position,tile_count)
@@ -6030,6 +6061,7 @@ subroutine read_data_2d_new(filename,fieldname,data,domain,timelevel,&
      data(:,:) = data_3d(:,:,1)
   endif
 
+  deallocate(data_3d)
 end subroutine read_data_2d_new
 !.....................................................................
 subroutine read_data_1d_new(filename,fieldname,data,domain,timelevel,&
@@ -6037,19 +6069,21 @@ subroutine read_data_1d_new(filename,fieldname,data,domain,timelevel,&
   character(len=*), intent(in)           :: filename, fieldname
   real, dimension(:), intent(inout)      :: data     !1 dimensional data
   !real, dimension(size(data,1),1,1)      :: data_3d
-  real      :: data_3d(size(data,1),1,1)
+  real, allocatable, dimension(:,:,:)      :: data_3d
   type(domain2d), intent(in), optional   :: domain
   integer, intent(in) , optional         :: timelevel
   logical, intent(in), optional          :: no_domain
   integer, intent(in), optional          :: tile_count
-#ifdef use_CRI_pointers
-  pointer( p, data_3d )
-  p = LOC(data)
-#endif
+!#ifdef use_CRI_pointers
+!  pointer( p, data_3d )
+!  p = LOC(data)
+!#endif
+  allocate(data_3d(size(data,1),1,1))
 
   call read_data_3d_new(filename,fieldname,data_3d,domain,timelevel,&
         no_domain=no_domain, scalar_or_1d=.true., tile_count=tile_count)
 
+  deallocate(data_3d)
 end subroutine read_data_1d_new
 !.....................................................................
 
@@ -6223,11 +6257,13 @@ subroutine read_data_3d ( unit, data, end)
   real,    intent(out), dimension(isd:,jsd:,:)  :: data
   logical, intent(out), optional                :: end
   !real, dimension(isg:ieg,jsg:jeg,size(data,3)) :: gdata
-  real :: gdata(isg:ieg,jsg:jeg,size(data,3))
+  real, allocatable, dimension(:,:,:) :: gdata
   integer                                       :: len
   logical                                       :: no_halo
+  allocate(gdata(isg:ieg,jsg:jeg,size(data,3)))
 
   include "read_data_3d.inc"
+  deallocate(gdata)
 end subroutine read_data_3d
 
 !#######################################################################
@@ -6254,12 +6290,14 @@ subroutine read_data_4d ( unit, data, end)
   real,    intent(out), dimension(isd:,jsd:,:,:)             :: data
   logical, intent(out), optional                             :: end
   !real, dimension(isg:ieg,jsg:jeg,size(data,3),size(data,4)) :: gdata
-  real :: gdata(isg:ieg,jsg:jeg,size(data,3),size(data,4))
+  real, allocatable, dimension(:,:,:,:) :: gdata
   integer                                                    :: len
   logical                                                    :: no_halo
 ! WARNING: memory usage with this routine could be costly
+  allocate(gdata(isg:ieg,jsg:jeg,size(data,3),size(data,4)))
 
   include "read_data_4d.inc"
+  deallocate(gdata)
 end subroutine read_data_4d
 
 !#######################################################################
@@ -6333,9 +6371,11 @@ subroutine write_data_3d ( unit, data )
   integer, intent(in) :: unit
   real,    intent(in), dimension(isd:,jsd:,:) :: data
   !real, dimension(isg:ieg,jsg:jeg,size(data,3)) :: gdata
-  real :: gdata(isg:ieg,jsg:jeg,size(data,3))
+  real, allocatable, dimension(:,:,:) :: gdata
+  allocate(gdata(isg:ieg,jsg:jeg,size(data,3)))
 
   include "write_data.inc"
+  deallocate(gdata)
 end subroutine write_data_3d
 
 !#######################################################################
@@ -6357,8 +6397,9 @@ subroutine write_data_4d ( unit, data )
   integer, intent(in) :: unit
   real,    intent(in), dimension(isd:,jsd:,:,:) :: data
   !real, dimension(isg:ieg,jsg:jeg,size(data,3),size(data,4)) :: gdata
-  real :: gdata(isg:ieg,jsg:jeg,size(data,3),size(data,4))
+  real, allocatable, dimension(:,:,:,:) :: gdata
   integer :: n
+  allocate(gdata(isg:ieg,jsg:jeg,size(data,3),size(data,4)))
 
   if (.not.associated(Current_domain))  &
        call mpp_error(FATAL,'fms_io(write_data_4d): need to call set_domain ')
@@ -6369,6 +6410,7 @@ subroutine write_data_4d ( unit, data )
      call mpp_global_field ( Current_domain, data(:,:,:,n), gdata(:,:,:,n) )
   enddo
   if ( mpp_pe() == mpp_root_pe() ) write (unit) gdata
+  deallocate(gdata)
 end subroutine write_data_4d
 
 !#######################################################################
