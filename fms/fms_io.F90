@@ -113,7 +113,7 @@ use mpp_io_mod,      only: MPP_NETCDF, MPP_ASCII, MPP_MULTI, MPP_SINGLE, MPP_OVE
 use mpp_io_mod,      only: MPP_IEEE32, MPP_NATIVE, MPP_DELETE, MPP_APPEND, MPP_SEQUENTIAL, MPP_DIRECT
 use mpp_io_mod,      only: MAX_FILE_SIZE, mpp_get_att_value
 use mpp_io_mod,      only: mpp_get_dimension_length
-use mpp_domains_mod, only: domain2d, domain1d, NULL_DOMAIN1D, NULL_DOMAIN2D, operator( .EQ. )
+use mpp_domains_mod, only: domain2D, domain1D, NULL_DOMAIN1D, NULL_DOMAIN2D, mpp_domain_eq
 use mpp_domains_mod, only: CENTER, EAST, WEST, NORTH, SOUTH, CORNER
 use mpp_domains_mod, only: mpp_get_domain_components, mpp_get_compute_domain, mpp_get_data_domain
 use mpp_domains_mod, only: mpp_get_domain_shift, mpp_get_global_domain, mpp_global_field, mpp_domain_is_tile_root_pe
@@ -544,10 +544,10 @@ logical           :: print_chksum        = .false.
 logical           :: show_open_namelist_file_warning = .false.
 logical           :: debug_mask_list     = .false.
 logical           :: checksum_required   = .true.
-  namelist /fms_io_nml/ fms_netcdf_override, fms_netcdf_restart, &
-       threading_read, format, read_all_pe, iospec_ieee32,max_files_w,max_files_r, &
-       read_data_bug, time_stamp_restart, print_chksum, show_open_namelist_file_warning, &
-       debug_mask_list, checksum_required, dr_set_size
+  !namelist /fms_io_nml/ fms_netcdf_override, fms_netcdf_restart, &
+  !     threading_read, format, read_all_pe, iospec_ieee32,max_files_w,max_files_r, &
+  !     read_data_bug, time_stamp_restart, print_chksum, show_open_namelist_file_warning, &
+  !     debug_mask_list, checksum_required, dr_set_size
 
 integer            :: pack_size  ! = 1 for double = 2 for float
 
@@ -643,6 +643,10 @@ subroutine fms_io_init()
   character(len=256)                 :: grd_file, filename
   logical                            :: is_mosaic_grid
   character(len=4096)                :: attvalue
+    namelist /fms_io_nml/ fms_netcdf_override, fms_netcdf_restart, &
+       threading_read, format, read_all_pe, iospec_ieee32,max_files_w,max_files_r, &
+       read_data_bug, time_stamp_restart, print_chksum, show_open_namelist_file_warning, &
+       debug_mask_list, checksum_required, dr_set_size
 
   if (module_is_initialized) return
   call mpp_io_init()
@@ -4774,7 +4778,8 @@ subroutine write_data_4d_new(filename, fieldname, data, domain,    &
 
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:,:,:), intent(in)         :: data
-  real, dimension(size(data,1),size(data,2),size(data,3)*size(data,4)) :: data_3d
+  !real, dimension(size(data,1),size(data,2),size(data,3)*size(data,4)) :: data_3d
+  real :: data_3d(size(data,1),size(data,2),size(data,3)*size(data,4))
   real, intent(in), optional                   :: data_default
   type(domain2d), intent(in), optional         :: domain
   logical, intent(in), optional                :: no_domain
@@ -4799,7 +4804,8 @@ subroutine write_data_2d_new(filename, fieldname, data, domain,    &
 
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:), intent(in)             :: data
-  real, dimension(size(data,1),size(data,2),1) :: data_3d
+  !real, dimension(size(data,1),size(data,2),1) :: data_3d
+  real :: data_3d(size(data,1),size(data,2),1)
   real, intent(in), optional                   :: data_default
   type(domain2d), intent(in), optional         :: domain
   logical, intent(in), optional                :: no_domain
@@ -4820,7 +4826,8 @@ subroutine write_data_1d_new(filename, fieldname, data,domain, &
   type(domain2d), intent(in), optional   :: domain
   character(len=*), intent(in)           :: filename, fieldname
   real, dimension(:), intent(in)         :: data
-  real, dimension(size(data(:)),1,1)     :: data_3d
+  !real, dimension(size(data(:)),1,1)     :: data_3d
+  real     :: data_3d(size(data(:)),1,1)
   real, intent(in), optional             :: data_default
   logical, intent(in), optional          :: no_domain
   integer, intent(in), optional          :: tile_count
@@ -4880,7 +4887,7 @@ function lookup_domain(domain)
   integer                    :: i, lookup_domain
   lookup_domain = -1
   do i =1, num_domains
-     if(domain .EQ. array_domain(i)) then
+     if(mpp_domain_eq(domain,array_domain(i))) then
         lookup_domain = i
         exit
      endif
@@ -4902,7 +4909,7 @@ function lookup_axis(axis_sizes,siz,domains,dom)
   do j=1,size(axis_sizes(:))
      if (siz == axis_sizes(j)) then
         if (PRESENT(domains)) then
-           if (dom .EQ. domains(j)) then
+           if (mpp_domain_eq(dom,domains(j))) then
               lookup_axis = j
               exit
            endif
@@ -5267,7 +5274,8 @@ subroutine read_data_i3d_new(filename,fieldname,data,domain,timelevel, &
   logical, intent(in),          optional   :: no_domain
   integer, intent(in) ,         optional   :: position, tile_count
 
-  real, dimension(size(data,1),size(data,2),size(data,3)) :: r_data
+  !real, dimension(size(data,1),size(data,2),size(data,3)) :: r_data
+  real :: r_data(size(data,1),size(data,2),size(data,3))
   r_data = 0
   call read_data_3d_new(filename,fieldname,r_data,domain,timelevel, &
                         no_domain, .false., position, tile_count)
@@ -5282,7 +5290,8 @@ subroutine read_data_i2d_new(filename,fieldname,data,domain,timelevel, &
   integer, intent(in),        optional   :: timelevel
   logical, intent(in),        optional   :: no_domain
   integer, intent(in) ,       optional   :: position, tile_count
-  real, dimension(size(data,1),size(data,2)) :: r_data
+  !real, dimension(size(data,1),size(data,2)) :: r_data
+  real :: r_data(size(data,1),size(data,2))
 
   r_data = 0
   call read_data_2d_new(filename,fieldname,r_data,domain,timelevel, &
@@ -5299,7 +5308,8 @@ subroutine read_data_i1d_new(filename,fieldname,data,domain,timelevel, &
   logical, intent(in), optional          :: no_domain
   integer, intent(in), optional          :: tile_count
 
-  real, dimension(size(data,1))        :: r_data
+  !real, dimension(size(data,1))        :: r_data
+  real        :: r_data(size(data,1))
 
   call read_data_1d_new(filename,fieldname,r_data,domain,timelevel, &
                         no_domain, tile_count)
@@ -5451,7 +5461,8 @@ subroutine read_compressed_i1d(filename,fieldname,data,domain,timelevel,start,nr
   integer, intent(in) , optional         :: timelevel
   integer, intent(in) , optional         :: start(:), nread(:)
   integer, intent(in) , optional         :: threading
-  real, dimension(size(data))        :: r_data
+  !real, dimension(size(data))        :: r_data
+  real        :: r_data(size(data))
 
   r_data = 0.0
   call read_compressed_1d(filename,fieldname,r_data,domain,timelevel,start,nread,threading)
@@ -5465,7 +5476,8 @@ subroutine read_compressed_i2d(filename,fieldname,data,domain,timelevel,start,nr
   integer, intent(in),        optional   :: timelevel
   integer, intent(in) , optional         :: start(:), nread(:)
   integer, intent(in) , optional         :: threading
-  real, dimension(size(data,1),size(data,2)) :: r_data
+  !real, dimension(size(data,1),size(data,2)) :: r_data
+  real  :: r_data(size(data,1),size(data,2))
 
   r_data = 0.0
   call read_compressed_2d(filename,fieldname,r_data,domain,timelevel,start,nread,threading)
@@ -5475,7 +5487,8 @@ end subroutine read_compressed_i2d
 subroutine read_compressed_1d(filename,fieldname,data,domain,timelevel,start,nread,threading)
   character(len=*), intent(in)           :: filename, fieldname
   real, dimension(:), intent(inout)      :: data     !1 dimensional data
-  real, dimension(size(data,1),1)        :: data_2d
+  !real, dimension(size(data,1),1)        :: data_2d
+  real        :: data_2d(size(data,1),1)
   type(domain2d), intent(in), optional   :: domain
   integer, intent(in) , optional         :: timelevel
   integer, intent(in) , optional         :: start(:), nread(:)
@@ -5898,7 +5911,8 @@ subroutine read_data_4d_new(filename,fieldname,data,domain,timelevel,&
                             no_domain,position,tile_count)
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:,:,:), intent(inout)      :: data     !2 dimensional data
-  real, dimension(size(data,1),size(data,2),size(data,3)*size(data,4)) :: data_3d
+  !real, dimension(size(data,1),size(data,2),size(data,3)*size(data,4)) :: data_3d
+  real :: data_3d(size(data,1),size(data,2),size(data,3)*size(data,4))
   type(domain2d), intent(in), optional         :: domain
   integer, intent(in) , optional               :: timelevel
   logical, intent(in), optional                :: no_domain
@@ -5976,7 +5990,8 @@ subroutine read_data_2d_new(filename,fieldname,data,domain,timelevel,&
                             no_domain,position,tile_count)
   character(len=*), intent(in)                 :: filename, fieldname
   real, dimension(:,:), intent(inout)          :: data     !2 dimensional data
-  real, dimension(size(data,1),size(data,2),1) :: data_3d
+  !real, dimension(size(data,1),size(data,2),1) :: data_3d
+  real :: data_3d(size(data,1),size(data,2),1)
   type(domain2d), intent(in), optional         :: domain
   integer, intent(in) , optional               :: timelevel
   logical, intent(in), optional                :: no_domain
@@ -6021,7 +6036,8 @@ subroutine read_data_1d_new(filename,fieldname,data,domain,timelevel,&
                                                no_domain, tile_count)
   character(len=*), intent(in)           :: filename, fieldname
   real, dimension(:), intent(inout)      :: data     !1 dimensional data
-  real, dimension(size(data,1),1,1)      :: data_3d
+  !real, dimension(size(data,1),1,1)      :: data_3d
+  real      :: data_3d(size(data,1),1,1)
   type(domain2d), intent(in), optional   :: domain
   integer, intent(in) , optional         :: timelevel
   logical, intent(in), optional          :: no_domain
@@ -6089,7 +6105,7 @@ function unique_axes(file, index, id_axes, siz_axes, dom)
                  found = .true.
                  exit
               else if(cur_var%domain_idx >0 .AND. id_axes(j) >0) then
-                 if(dom(cur_var%domain_idx) .EQ. dom(id_axes(j)) ) then
+                 if(mpp_domain_eq(dom(cur_var%domain_idx),dom(id_axes(j))) ) then
                     found = .true.
                     exit
                  end if
@@ -6206,7 +6222,8 @@ subroutine read_data_3d ( unit, data, end)
   integer, intent(in)                           :: unit
   real,    intent(out), dimension(isd:,jsd:,:)  :: data
   logical, intent(out), optional                :: end
-  real, dimension(isg:ieg,jsg:jeg,size(data,3)) :: gdata
+  !real, dimension(isg:ieg,jsg:jeg,size(data,3)) :: gdata
+  real :: gdata(isg:ieg,jsg:jeg,size(data,3))
   integer                                       :: len
   logical                                       :: no_halo
 
@@ -6236,7 +6253,8 @@ subroutine read_data_4d ( unit, data, end)
   integer, intent(in)                                        :: unit
   real,    intent(out), dimension(isd:,jsd:,:,:)             :: data
   logical, intent(out), optional                             :: end
-  real, dimension(isg:ieg,jsg:jeg,size(data,3),size(data,4)) :: gdata
+  !real, dimension(isg:ieg,jsg:jeg,size(data,3),size(data,4)) :: gdata
+  real :: gdata(isg:ieg,jsg:jeg,size(data,3),size(data,4))
   integer                                                    :: len
   logical                                                    :: no_halo
 ! WARNING: memory usage with this routine could be costly
@@ -6314,7 +6332,8 @@ subroutine write_data_3d ( unit, data )
 
   integer, intent(in) :: unit
   real,    intent(in), dimension(isd:,jsd:,:) :: data
-  real, dimension(isg:ieg,jsg:jeg,size(data,3)) :: gdata
+  !real, dimension(isg:ieg,jsg:jeg,size(data,3)) :: gdata
+  real :: gdata(isg:ieg,jsg:jeg,size(data,3))
 
   include "write_data.inc"
 end subroutine write_data_3d
@@ -6337,7 +6356,8 @@ subroutine write_data_4d ( unit, data )
 
   integer, intent(in) :: unit
   real,    intent(in), dimension(isd:,jsd:,:,:) :: data
-  real, dimension(isg:ieg,jsg:jeg,size(data,3),size(data,4)) :: gdata
+  !real, dimension(isg:ieg,jsg:jeg,size(data,3),size(data,4)) :: gdata
+  real :: gdata(isg:ieg,jsg:jeg,size(data,3),size(data,4))
   integer :: n
 
   if (.not.associated(Current_domain))  &

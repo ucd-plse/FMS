@@ -241,10 +241,14 @@
       type(domain2D), intent(in) :: domain
       MPP_TYPE_, intent(inout) :: data(:,:)
       integer, intent(in), optional :: tindex, tile_count
-      MPP_TYPE_ :: data3D(size(data,1),size(data,2),1)
-      pointer( ptr, data3D )
-      ptr = LOC(data)
+      !MPP_TYPE_ :: data3D(size(data,1),size(data,2),1)
+      !pointer( ptr, data3D )
+      !ptr = LOC(data)
+      MPP_TYPE_, dimension(:,:,:), allocatable :: data3D
+      allocate(data3D(size(data,1),size(data,2),1))
       call mpp_read( unit, field, domain, data3D, tindex, tile_count)
+      data(:,:) = data3D(:,:,1)
+      deallocate(data3d)
       return
     end subroutine MPP_READ_2DDECOMP_2D_
 
@@ -377,10 +381,17 @@
       type(domain2D), intent(in) :: domain
       MPP_TYPE_, intent(inout) :: data(:,:,:,:)
       integer, intent(in), optional :: tindex, tile_count
-      MPP_TYPE_ :: data3D(size(data,1),size(data,2),size(data,3)*size(data,4))
-      pointer( ptr, data3D )
-      ptr = LOC(data)
+      !MPP_TYPE_ :: data3D(size(data,1),size(data,2),size(data,3)*size(data,4))
+      !pointer( ptr, data3D )
+      !ptr = LOC(data)
+      MPP_TYPE_, dimension(:,:,:), allocatable :: data3D
+      integer :: k
+      allocate(data3D(size(data,1),size(data,2),size(data,3)*size(data,4)))
       call mpp_read( unit, field, domain, data3D, tindex, tile_count)
+      do k=1, size(data,4)
+        data(:,:,:,k) = data3D(:,:,size(data,3)*(k-1)+1:size(data,3)*k)
+      enddo
+      deallocate(data3D)
       return
     end subroutine MPP_READ_2DDECOMP_4D_
 

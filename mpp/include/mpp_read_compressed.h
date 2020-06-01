@@ -23,11 +23,14 @@
       MPP_TYPE_, intent(inout) :: data(:)
       integer,           intent(in), optional :: tindex
 
-      MPP_TYPE_ :: data2D(size(data,1),1)
-      pointer( ptr, data2D )
-      ptr = LOC(data)
-
+      !MPP_TYPE_ :: data2D(size(data,1),1)
+      !pointer( ptr, data2D )
+      !ptr = LOC(data)
+      MPP_TYPE_, dimension(:,:), allocatable :: data2D
+      allocate(data2D(size(data,1),1))
       call mpp_read(unit, field, domain, data2D, tindex)
+      data(:) = data2d(:,1)
+      deallocate(data2d)
       return
     end subroutine MPP_READ_COMPRESSED_1D_
 

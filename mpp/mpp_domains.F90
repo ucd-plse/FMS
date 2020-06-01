@@ -2562,6 +2562,12 @@ end interface
      module procedure mpp_domainUG_ne
   end interface
 
+  interface mpp_domain_eq
+     module procedure mpp_domain1D_eq
+     module procedure mpp_domain2D_eq
+     module procedure mpp_domainUG_eq
+  end interface
+
   interface mpp_domain_ne
      module procedure mpp_domain1D_ne
      module procedure mpp_domain2D_ne

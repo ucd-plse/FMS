@@ -172,9 +172,9 @@ subroutine mpp_io_unstructured_read_r_1D(funit, &
                 chk = mpp_chksum(ceiling(fdata), &
                                  mask_val=field%fill)
             endif
-        else
-            chk = mpp_chksum(fdata, &
-                             mask_val=field%fill)
+        !else
+        !    chk = mpp_chksum(fdata, &
+        !                     mask_val=field%fill)
         endif
 #endif
        !Print out the computed check-sum for the field.  This feature is
@@ -352,9 +352,9 @@ subroutine mpp_io_unstructured_read_r_2D(funit, &
                 chk = mpp_chksum(ceiling(fdata), &
                                  mask_val=field%fill)
             endif
-        else
-            chk = mpp_chksum(fdata, &
-                             mask_val=field%fill)
+        !else
+        !    chk = mpp_chksum(fdata, &
+        !                     mask_val=field%fill)
         endif
 #endif
        !Print out the computed check-sum for the field.  This feature is
@@ -532,9 +532,9 @@ subroutine mpp_io_unstructured_read_r_3D(funit, &
                 chk = mpp_chksum(ceiling(fdata), &
                                  mask_val=field%fill)
             endif
-        else
-            chk = mpp_chksum(fdata, &
-                             mask_val=field%fill)
+        !else
+        !    chk = mpp_chksum(fdata, &
+        !                     mask_val=field%fill)
         endif
 #endif
        !Print out the computed check-sum for the field.  This feature is

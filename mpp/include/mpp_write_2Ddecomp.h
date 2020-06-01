@@ -212,11 +212,15 @@
       integer,           intent(in), optional :: tile_count
       MPP_TYPE_,         intent(in), optional :: default_data
 
-      MPP_TYPE_ :: data3D(size(data,1),size(data,2),1)
-      pointer( ptr, data3D )
-      ptr = LOC(data)
+      !MPP_TYPE_ :: data3D(size(data,1),size(data,2),1)
+      !pointer( ptr, data3D )
+      !ptr = LOC(data)
 
+      MPP_TYPE_, dimension(:,:,:), allocatable :: data3D
+      allocate(data3D(size(data,1),size(data,2),1))
+      data3D(:,:,1)=data(:,:)
       call mpp_write( unit, field, domain, data3D, tstamp, tile_count, default_data)
+      deallocate(data3D)
       return
     end subroutine MPP_WRITE_2DDECOMP_2D_
 
