@@ -324,7 +324,7 @@
           endif
       else
           do unit = unit_begin, unit_end
-             inquire( unit,OPENED=mpp_file(unit)%opened )
+             inquire( unit=unit,OPENED=mpp_file(unit)%opened )
              if( .NOT.mpp_file(unit)%opened )exit
           end do
           if( unit.GT.unit_end ) then
@@ -759,7 +759,7 @@
               open( unit, file=trim(mpp_file(unit)%name), access=acc, form=for, action=act, position=pos, iostat=ios)
           end if   
 !check if OPEN worked
-          inquire( unit,OPENED=mpp_file(unit)%opened )
+          inquire( unit=unit,OPENED=mpp_file(unit)%opened )
           if (ios/=0) then
               if (PRESENT(iostat)) then
                   iostat=ios

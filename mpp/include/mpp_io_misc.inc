@@ -51,6 +51,9 @@
       logical                       :: opened
       real(DOUBLE_KIND)             :: doubledata = 0
       real                          :: realarray(4)
+      namelist /mpp_io_nml/ header_buffer_val, global_field_on_root_pe, io_clocks_on, &
+                         shuffle, deflate_level, cf_compliance
+
 
       if( module_is_initialized )return
 
@@ -76,7 +79,7 @@
       read (input_nml_file, mpp_io_nml, iostat=io_status)
 #else
       do unit_nml = unit_begin, unit_end
-         inquire( unit_nml,OPENED=opened )
+         inquire( unit=unit_nml,OPENED=opened )
          if( .NOT.opened )exit
       end do
       open(unit_nml,file='input.nml')

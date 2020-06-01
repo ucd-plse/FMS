@@ -1310,7 +1310,7 @@
 
 !write axis def
           if( ASSOCIATED(axis%data) )then !space axis
-              if( mpp_file(unit)%fileset.EQ.MPP_MULTI .AND. axis%domain.NE.NULL_DOMAIN1D )then
+              if( mpp_file(unit)%fileset.EQ.MPP_MULTI .AND. mpp_domain_ne(axis%domain,NULL_DOMAIN1D) )then
                   call mpp_get_compute_domain( axis%domain, is, ie )
                   call mpp_get_global_domain( axis%domain, isg, ieg )
                   ie  = ie + axis%shift
@@ -1339,7 +1339,7 @@
           call write_attribute( unit, trim(text), cval=axis%name )
           write( text, '(a,i4,a)' )'AXIS ', axis%id, ' size'
           if( ASSOCIATED(axis%data) )then !space axis
-              if( mpp_file(unit)%fileset.EQ.MPP_MULTI .AND. axis%domain.NE.NULL_DOMAIN1D )then
+              if( mpp_file(unit)%fileset.EQ.MPP_MULTI .AND. mpp_domain_ne(axis%domain,NULL_DOMAIN1D) )then
                   call mpp_get_compute_domain(axis%domain, is, ie)
                   call write_attribute( unit, trim(text), ival=(/ie-is+1/) ) ! ??? is, ie is not initialized
               else
@@ -1365,7 +1365,8 @@
          endif
       enddo
 
-      if( mpp_file(unit)%threading.EQ.MPP_MULTI .AND. mpp_file(unit)%fileset.EQ.MPP_MULTI .AND. axis%domain.NE.NULL_DOMAIN1D )then
+      if( mpp_file(unit)%threading.EQ.MPP_MULTI .AND. mpp_file(unit)%fileset.EQ.MPP_MULTI .AND. &
+                mpp_domain_ne(axis%domain,NULL_DOMAIN1D) )then
           call mpp_write_meta( unit, axis%id, 'domain_decomposition', ival=(/isg,ieg,is,ie/) )
       end if
       if( verbose )print '(a,2i6,x,a,2i3)', 'MPP_WRITE_META: Wrote axis metadata, pe, unit, axis%name, axis%id, axis%did=', &
