@@ -245,14 +245,14 @@ use fms_mod,       only : error_mesg, FATAL, WARNING, stdlog, write_version_numb
 use mpp_mod,       only : mpp_npes,  mpp_sync, mpp_root_pe, mpp_send, mpp_recv, mpp_max, &
                           mpp_get_current_pelist, input_nml_file, &
                           COMM_TAG_1, COMM_TAG_2, COMM_TAG_3, COMM_TAG_4
-use mpp_domains_mod,only: domain2d, mpp_get_compute_domain
+use mpp_domains_mod,only: domain2D, mpp_get_compute_domain
 use diag_axis_mod, only : diag_axis_init
 use diag_output_mod,only:  write_axis_meta_data, write_field_meta_data,diag_fieldtype,done_meta_data
 use diag_manager_mod,only : get_date_dif, DIAG_SECONDS, DIAG_MINUTES, DIAG_HOURS, &
                             DIAG_DAYS, DIAG_MONTHS, DIAG_YEARS
 use diag_util_mod,only    : diag_time_inc
-use time_manager_mod, only: operator(>),operator(>=),time_type,get_calendar_type,NO_CALENDAR,set_time, &
-                            set_date, increment_date, increment_time
+use time_manager_mod!, only: operator(>),operator(>=),time_type,get_calendar_type,NO_CALENDAR,set_time, &
+                    !        set_date, increment_date, increment_time
 
 !--------------------------------------------------------------------
 

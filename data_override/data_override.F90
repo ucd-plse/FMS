@@ -89,7 +89,7 @@ use time_interp_external_mod, only:time_interp_external_init, time_interp_extern
 use fms_io_mod, only: field_size, read_data, fms_io_init,get_mosaic_tile_grid, get_mosaic_tile_file
 use fms_mod, only: write_version_number, field_exist, lowercase, file_exist, open_namelist_file, check_nml_error, close_file
 use axis_utils_mod, only: get_axis_bounds, nearest_index
-use mpp_domains_mod, only : domain2d, mpp_get_compute_domain, NULL_DOMAIN2D,operator(.NE.),operator(.EQ.)
+use mpp_domains_mod, only : domain2D, mpp_get_compute_domain, NULL_DOMAIN2D, mpp_domain_ne, mpp_domain_eq
 use mpp_domains_mod, only : mpp_copy_domain, mpp_get_global_domain
 use mpp_domains_mod, only : mpp_get_data_domain, mpp_set_compute_domain, mpp_set_data_domain
 use mpp_domains_mod, only : mpp_set_global_domain, mpp_deallocate_domain
@@ -159,7 +159,7 @@ logical                                         :: lndUG_on
 logical                                         :: debug_data_override
 logical                                         :: grid_center_bug = .false.
 
-namelist /data_override_nml/ debug_data_override, grid_center_bug
+!namelist /data_override_nml/ debug_data_override, grid_center_bug
 
 interface data_override
      module procedure data_override_0d
@@ -215,6 +215,7 @@ subroutine data_override_init(Atm_domain_in, Ocean_domain_in, Ice_domain_in, Lan
 
 
   type(data_type)  :: data_entry
+  namelist /data_override_nml/ debug_data_override, grid_center_bug
 
   debug_data_override = .false.
 
@@ -578,7 +579,7 @@ subroutine get_domain(gridname, domain, comp_domain)
      case default
         call mpp_error(FATAL,'error in data_override get_domain')
   end select
-  if(domain .EQ. NULL_DOMAIN2D) call mpp_error(FATAL,'data_override: failure in get_domain')
+  if(mpp_domain_eq(domain,NULL_DOMAIN2D)) call mpp_error(FATAL,'data_override: failure in get_domain')
   if(present(comp_domain)) &
      call mpp_get_compute_domain(domain,comp_domain(1),comp_domain(2),comp_domain(3),comp_domain(4)) 
 end subroutine get_domain

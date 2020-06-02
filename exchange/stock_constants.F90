@@ -22,7 +22,7 @@ module stock_constants_mod
   use mpp_mod, only : mpp_pe, mpp_root_pe, mpp_sum
   use fms_mod, only : write_version_number
   use time_manager_mod, only : time_type, get_time
-  use time_manager_mod, only : operator(+), operator(-)
+  use time_manager_mod!, only : operator(+), operator(-)
   use diag_manager_mod, only : register_diag_field,send_data
 
   implicit none

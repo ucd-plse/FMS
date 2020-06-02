@@ -129,22 +129,22 @@ use horiz_interp_mod,  only : horiz_interp_type, &
                               assignment(=), &
                               horiz_interp,      &
                               horiz_interp_del
-use time_manager_mod,  only : time_type,   &
-                              set_time,    &
-                              set_date,    &
-                              get_date,    &
-                              get_calendar_type, &
-                              JULIAN, NOLEAP, &
-                              get_date_julian, set_date_no_leap, &
-                              set_date_julian, get_date_no_leap, &
-                              print_date, &
-                              operator(+), &
-                              operator(-), &
-                              operator(*), &
-                              operator(>), &
-                              operator(<), &
-                              assignment(=), &
-                              decrement_time
+use time_manager_mod!,  only : time_type,   &
+                    !          set_time,    &
+                    !          set_date,    &
+                    !          get_date,    &
+                    !          get_calendar_type, &
+                    !          JULIAN, NOLEAP, &
+                    !          get_date_julian, set_date_no_leap, &
+                    !          set_date_julian, get_date_no_leap, &
+                    !          print_date, &
+                    !          operator(+), &
+                    !          operator(-), &
+                    !          operator(*), &
+                    !          operator(>), &
+                    !          operator(<), &
+                    !          assignment(=), &
+                    !          decrement_time
 use time_interp_mod,   only : time_interp, YEAR
 use constants_mod,     only : grav, PI, SECONDS_PER_DAY
 
@@ -375,8 +375,8 @@ integer :: verbose = 0                              !< No description
 logical :: conservative_interp = .true.          !< No description
 logical :: retain_cm3_bug = .true.               !< No description
 
-namelist /interpolator_nml/    &
-                             read_all_on_init, verbose, conservative_interp, retain_cm3_bug
+!namelist /interpolator_nml/    &
+!                             read_all_on_init, verbose, conservative_interp, retain_cm3_bug
 
 contains
 
@@ -513,6 +513,8 @@ real, allocatable :: time_in(:)
 real, allocatable, save :: agrid_mod(:,:,:)
 integer :: nx, ny
 integer :: io, ierr
+namelist /interpolator_nml/    &
+                             read_all_on_init, verbose, conservative_interp, retain_cm3_bug
 
 if (.not. module_is_initialized) then
   call fms_init

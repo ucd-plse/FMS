@@ -140,7 +140,7 @@ use mpp_mod,         only: mpp_npes, mpp_pe, mpp_root_pe, mpp_send, mpp_recv, &
                            COMM_TAG_9, COMM_TAG_10
 use mpp_mod,         only: input_nml_file, mpp_set_current_pelist, mpp_sum, mpp_sync
 use mpp_domains_mod, only: mpp_get_compute_domain, mpp_get_compute_domains, &
-                           Domain2d, mpp_global_sum, mpp_update_domains,    &
+                           domain2D, mpp_global_sum, mpp_update_domains,    &
                            mpp_modify_domain, mpp_get_data_domain, XUPDATE, &
                            YUPDATE, mpp_get_current_ntile, mpp_get_tile_id, &
                            mpp_get_ntile_count, mpp_get_tile_list,          &
@@ -211,8 +211,8 @@ logical :: monotonic_exchange = .false.
 integer :: nsubset = 0 ! 0 means mpp_npes()
 logical :: do_alltoall = .true.
 logical :: do_alltoallv = .false.
-namelist /xgrid_nml/ make_exchange_reproduce, interp_method, debug_stocks, xgrid_log, xgrid_clocks_on, &
-    monotonic_exchange, nsubset, do_alltoall, do_alltoallv
+!namelist /xgrid_nml/ make_exchange_reproduce, interp_method, debug_stocks, xgrid_log, xgrid_clocks_on, &
+!    monotonic_exchange, nsubset, do_alltoall, do_alltoallv
 ! </NAMELIST>
 logical :: init = .true.
 integer :: remapping_method
@@ -532,6 +532,8 @@ subroutine xgrid_init(remap_method)
   integer, intent(out) :: remap_method
 
   integer :: unit, ierr, io, out_unit
+  namelist /xgrid_nml/ make_exchange_reproduce, interp_method, debug_stocks, xgrid_log, xgrid_clocks_on, &
+    monotonic_exchange, nsubset, do_alltoall, do_alltoallv
 
   if (module_is_initialized) return
   module_is_initialized = .TRUE.
@@ -4593,40 +4595,41 @@ subroutine stock_move_ug_3d(from, to, grid_index, data, xmap, &
   real, intent(in)                :: radius       ! earth radius
   character(len=*), intent(in), optional      :: verbose
   integer, intent(out)            :: ier
-  real, dimension(size(data,1),size(data,2)) :: tmp
+        call error_mesg ('xgrid_mod',  'unsupported', FATAL)
+  !real, dimension(size(data,1),size(data,2)) :: tmp
 
-  real    :: from_dq, to_dq
+  !real    :: from_dq, to_dq
 
-  ier = 0
-  if(grid_index == 1) then
-     ! data has rank 3 so grid index must be > 1
-     ier = 1
-     return
-  endif
+  !ier = 0
+  !if(grid_index == 1) then
+  !   ! data has rank 3 so grid index must be > 1
+  !   ier = 1
+  !   return
+  !endif
 
-  if(.not. associated(xmap%grids) ) then
-     ier = 2
-     return
-  endif
+  !if(.not. associated(xmap%grids) ) then
+  !   ier = 2
+  !   return
+  !endif
 
-     tmp = xmap%grids(grid_index)%frac_area(:,1,:) * data
-     from_dq = delta_t * 4.0*PI*radius**2 * sum( xmap%grids(grid_index)%area(:,1) * &
-          & sum(tmp, DIM=2))
-     to_dq = from_dq
+  !   tmp = xmap%grids(grid_index)%frac_area(:,1,:) * data
+  !   from_dq = delta_t * 4.0*PI*radius**2 * sum( xmap%grids(grid_index)%area(:,1) * &
+  !        & sum(tmp, DIM=2))
+  !   to_dq = from_dq
 
-  ! update only if argument is present.
-  if(present(to  )) to   % dq(  to_side) = to   % dq(  to_side) + to_dq
-  if(present(from)) from % dq(from_side) = from % dq(from_side) - from_dq
+  !! update only if argument is present.
+  !if(present(to  )) to   % dq(  to_side) = to   % dq(  to_side) + to_dq
+  !if(present(from)) from % dq(from_side) = from % dq(from_side) - from_dq
 
-  if(present(verbose).and.debug_stocks) then
-     call mpp_sum(from_dq)
-     call mpp_sum(to_dq)
-     from_dq = from_dq/(4.0*PI*radius**2)
-     to_dq   = to_dq  /(4.0*PI*radius**2)
-     if(mpp_pe()==mpp_root_pe()) then
-        write(stocks_file,'(a,es19.12,a,es19.12,a)') verbose, from_dq,' [*/m^2]'
-     endif
-  endif
+  !if(present(verbose).and.debug_stocks) then
+  !   call mpp_sum(from_dq)
+  !   call mpp_sum(to_dq)
+  !   from_dq = from_dq/(4.0*PI*radius**2)
+  !   to_dq   = to_dq  /(4.0*PI*radius**2)
+  !   if(mpp_pe()==mpp_root_pe()) then
+  !      write(stocks_file,'(a,es19.12,a,es19.12,a)') verbose, from_dq,' [*/m^2]'
+  !   endif
+  !endif
 
 end subroutine stock_move_ug_3d
 

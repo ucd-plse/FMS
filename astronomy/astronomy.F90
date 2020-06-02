@@ -67,7 +67,6 @@ use time_manager_mod!,  only: time_type, set_time, get_time, &
                     !         time_manager_init, &
                     !         operator(-), operator(+), &
                     !         operator( // ), operator(<)
-use time_manager_mod,  only: tmm_seconds_per_day => seconds_per_day
 use constants_mod,     only: constants_init, PI
 use mpp_mod,           only: input_nml_file
 
