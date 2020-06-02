@@ -5516,6 +5516,7 @@ subroutine read_compressed_1d(filename,fieldname,data,domain,timelevel,start,nre
 !#endif
   allocate(data_2d(size(data,1),1))
   call read_compressed_2d(filename,fieldname,data_2d,domain,timelevel,start,nread,threading)
+  data(:) = data_2d(:,1)
   deallocate(data_2d)
 end subroutine read_compressed_1d
 !.....................................................................
@@ -6083,6 +6084,7 @@ subroutine read_data_1d_new(filename,fieldname,data,domain,timelevel,&
   call read_data_3d_new(filename,fieldname,data_3d,domain,timelevel,&
         no_domain=no_domain, scalar_or_1d=.true., tile_count=tile_count)
 
+  data(:) = data_3d(:,1,1)
   deallocate(data_3d)
 end subroutine read_data_1d_new
 !.....................................................................
