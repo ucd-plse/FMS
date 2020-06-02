@@ -1387,7 +1387,8 @@ CONTAINS
           ! <ERROR STATUS="FATAL">
           !   Unable to allocate memory for diag axis attributes
           ! </ERROR>
-          IF ( fms_error_handler('diag_util_mod::attribute_init_axis', 'Unable to allocate memory for diag axis attributes', err_msg) ) THEN
+          IF ( fms_error_handler('diag_util_mod::attribute_init_axis', &
+                    'Unable to allocate memory for diag axis attributes', err_msg) ) THEN
              RETURN
           END IF
        ELSE
@@ -1537,7 +1538,7 @@ CONTAINS
 
     associate (axis=>Axes(id))
     if (.not._ALLOCATED(axis%attributes)) call error_mesg(tag, &
-       'attempt to get compression dimensions from axis "'//trim(axis%name)//'" which is not compressed (does not have any attributes)', FATAL)
+       'attempt to get compression dimensions from axis "'//trim(axis%name)//'" which is not compressed (no attrs)', FATAL)
 
     iatt = 0
     do k = 1,axis%num_attributes

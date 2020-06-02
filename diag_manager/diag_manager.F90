@@ -126,13 +126,14 @@ MODULE diag_manager_mod
   !          <B>different</B> files or a fatal error will occur.
   !
   !          The namelist <B>default</B> value is <TT>mix_snapshot_average_fields=.false.</TT></LI>
-  !     <LI> Time average, Root Mean Square, Max and Min, and diurnal. In addition to time average users can also get then Root Mean Square, Max or Min value
+  !     <LI> Time average, Root Mean Square, Max and Min, and diurnal. In addition to time average users can also get then 
+  ! Root Mean Square, Max or Min value
   !          during the same interval of time as time average. For this purpose, in the diag table users must replace
-  !          <TT>.true.</TT> or <TT>.false.</TT> by "<TT>rms</TT>, <TT>max</TT>" or "<TT>min</TT>".  <B><I>Note:</I></B> Currently, max
-  !          and min are not available for regional output.
+  !          <TT>.true.</TT> or <TT>.false.</TT> by "<TT>rms</TT>, <TT>max</TT>" or "<TT>min</TT>".  <B><I>Note:</I></B> Currently
+  !          max and min are not available for regional output.
   !
-  !          A diurnal average or the average of an integer power can also be requested using <TT>diurnal##</TT> or <TT>pow##</TT> where
-  !          <TT>##</TT> are the number of diurnal sections or integer power to average.</LI>
+  !          A diurnal average or the average of an integer power can also be requested using <TT>diurnal##</TT> or <TT>pow##</TT>
+  !          where <TT>##</TT> are the number of diurnal sections or integer power to average.</LI>
   !     <LI> <TT>standard_name</TT> is added as optional argument in <LINK SRC="#register_diag_field"><TT>register_diag_field</TT>
   !          </LINK>.</LI>
   !     <LI>When namelist variable <TT>debug_diag_manager = .true.</TT> array
@@ -172,7 +173,7 @@ MODULE diag_manager_mod
   !     CMOR standard value of -1.0e20.
   !   </DATA>
   !   <DATA NAME="issue_oor_warnings" TYPE="LOGICAL" DEFAULT=".TRUE.">
-  !     If <TT>.TRUE.</TT>, then the <TT>diag_manager</TT> will check for values outside the valid range.  This range is defined in
+  !    If <TT>.TRUE.</TT>, then the <TT>diag_manager</TT> will check for values outside the valid range.  This range is defined in
   !     the model, and passed to the <TT>diag_manager_mod</TT> via the OPTIONAL variable range in the <TT>register_diag_field</TT>
   !     function.
   !   </DATA>
@@ -197,9 +198,9 @@ MODULE diag_manager_mod
   !   </DATA>
   ! </NAMELIST>
 
-  USE time_manager_mod, ONLY: set_time, set_date, get_time, time_type, OPERATOR(>=), OPERATOR(>),&
-       & OPERATOR(<), OPERATOR(==), OPERATOR(/=), OPERATOR(/), OPERATOR(+), ASSIGNMENT(=), get_date, &
-       & get_ticks_per_second
+  USE time_manager_mod!, ONLY: set_time, set_date, get_time, time_type, OPERATOR(>=), OPERATOR(>),&
+       !& OPERATOR(<), OPERATOR(==), OPERATOR(/=), OPERATOR(/), OPERATOR(+), ASSIGNMENT(=), get_date, &
+       !& get_ticks_per_second
   USE mpp_io_mod, ONLY: mpp_open, mpp_close, mpp_get_maxunits
   USE mpp_mod, ONLY: mpp_get_current_pelist, mpp_pe, mpp_npes, mpp_root_pe, mpp_sum
 
@@ -237,9 +238,9 @@ MODULE diag_manager_mod
   USE diag_manifest_mod, ONLY: write_diag_manifest
   USE constants_mod, ONLY: SECONDS_PER_DAY
 
-#ifdef use_netCDF
-  USE netcdf, ONLY: NF90_INT, NF90_FLOAT, NF90_CHAR
-#endif
+!#ifdef use_netCDF
+!  USE netcdf, ONLY: NF90_INT, NF90_FLOAT, NF90_CHAR
+!#endif
 
 !----------
 !ug support
@@ -466,6 +467,9 @@ MODULE diag_manager_mod
   END INTERFACE diag_field_add_attribute
   ! </INTERFACE>
 
+  integer, parameter :: nf90_char = 2
+  integer, parameter :: nf90_int = 4
+  integer, parameter :: nf90_float = 5
 CONTAINS
 
   ! <FUNCTION NAME="register_diag_field_scalar" INTERFACE="register_diag_field">
@@ -1481,7 +1485,9 @@ CONTAINS
        mask_out = .TRUE.
     END IF
 
-    IF ( PRESENT(rmask) ) WHERE (rmask < 0.5) mask_out(:, 1, 1) = .FALSE.
+    IF ( PRESENT(rmask) ) then
+      WHERE (rmask < 0.5) mask_out(:, 1, 1) = .FALSE.
+    endif
     IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
        IF ( PRESENT(is_in) .OR. PRESENT(ie_in) ) THEN
           send_data_1d = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=1, ks_in=1,&
@@ -1545,7 +1551,9 @@ CONTAINS
        mask_out = .TRUE.
     END IF
 
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) mask_out(:, :, 1) = .FALSE.
+    IF ( PRESENT(rmask) ) then
+      WHERE ( rmask < 0.5 ) mask_out(:, :, 1) = .FALSE.
+    endif
     IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
        send_data_2d = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=1, mask=mask_out,&
             & ie_in=ie_in, je_in=je_in, ke_in=1, weight=weight, err_msg=err_msg)
@@ -1588,7 +1596,9 @@ CONTAINS
        mask_out = .TRUE.
     END IF
 
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) mask_out(:, :, 1) = .FALSE.
+    IF ( PRESENT(rmask) ) then
+      WHERE ( rmask < 0.5 ) mask_out(:, :, 1) = .FALSE.
+    endif
     IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
        send_data_2d_r8 = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=1, mask=mask_out,&
             & ie_in=ie_in, je_in=je_in, ke_in=1, weight=weight, err_msg=err_msg)
@@ -1630,7 +1640,9 @@ CONTAINS
        mask_out = .TRUE.
     END IF
 
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) mask_out = .FALSE.
+    IF ( PRESENT(rmask) ) then
+       WHERE ( rmask < 0.5 ) mask_out = .FALSE.
+    endif
     IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
        send_data_3d_r8 = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=ks_in, mask=mask_out,&
             & ie_in=ie_in, je_in=je_in, ke_in=ke_in, weight=weight, err_msg=err_msg)
@@ -1727,7 +1739,9 @@ CONTAINS
     ELSE
        oor_mask = .TRUE.
     END IF
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) oor_mask = .FALSE.
+    IF ( PRESENT(rmask) ) then
+      WHERE ( rmask < 0.5 ) oor_mask = .FALSE.
+    endif
 
     ! send_data works in either one or another of two modes.
     ! 1. Input field is a window (e.g. FMS physics)
@@ -2176,7 +2190,7 @@ CONTAINS
                             k1 = k-l_start(3)+1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
                                      IF ( mask(i-is+1+hi, j-js+1+hj, k) ) THEN
@@ -2202,7 +2216,7 @@ CONTAINS
                             k1 = k-l_start(3)+1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                           IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
                                      IF ( mask(i-is+1+hi, j-js+1+hj, k) ) THEN
@@ -2363,35 +2377,35 @@ CONTAINS
                       IF (numthreads>1 .AND. phys_window) then
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
-                                  i1 = i-l_start(1)-hi+1
-                                  j1 =  j-l_start(2)-hj+1
-                                  IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
-                                  ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
-                               END IF
-                               END IF
+               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                  i1 = i-l_start(1)-hi+1
+                  j1 =  j-l_start(2)-hj+1
+                  IF ( pow_value /= 1 ) THEN
+                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
+                  ELSE
+                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
+               END IF
+               END IF
                             END DO
                          END DO
                       ELSE
 !$OMP CRITICAL
                          DO j = js, je
-                            DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
-                                  i1 = i-l_start(1)-hi+1
-                                  j1 =  j-l_start(2)-hj+1
-                                  IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
-                                  ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
-                               END IF
-                               END IF
-                            END DO
+                       DO i = is, ie
+                          IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                             i1 = i-l_start(1)-hi+1
+                             j1 =  j-l_start(2)-hj+1
+                             IF ( pow_value /= 1 ) THEN
+                                output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                                     & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
+                             ELSE
+                                output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                                     & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
+                          END IF
+                          END IF
+                       END DO
                          END DO
 !$OMP END CRITICAL
                       END IF
@@ -2482,7 +2496,7 @@ CONTAINS
                             k1 = k - l_start(3) + 1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
+                           IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
                                      IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
@@ -2508,7 +2522,7 @@ CONTAINS
                             k1 = k - l_start(3) + 1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
                                      IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
@@ -2687,14 +2701,14 @@ CONTAINS
                       IF( numthreads > 1 .AND. phys_window ) then
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                             IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
                                   i1 = i-l_start(1)-hi+1
                                   j1=  j-l_start(2)-hj+1
                                   IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                  output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
                                           & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
                                   ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                  output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
                                           & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
                                END IF
                                END IF
@@ -2704,14 +2718,14 @@ CONTAINS
 !$OMP CRITICAL
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
                                   i1 = i-l_start(1)-hi+1
                                   j1=  j-l_start(2)-hj+1
                                   IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                  output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
                                           & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
                                   ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                  output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
                                           & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
                                END IF
                                END IF
@@ -4139,7 +4153,7 @@ CONTAINS
              ! Checking to see if num_attributes == max_field_attributes, and return error message
              IF ( this_attribute .GT. max_field_attributes ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Number of attributes exceeds max_field_attributes for attribute <name> to module/input_field <module_name>/<field_name>.
+      !   Number of attributes exceeds max_field_attributes for attribute <name> to module/input_field <module_name>/<field_name>.
                 !   Increase diag_manager_nml:max_field_attributes.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -4161,7 +4175,7 @@ CONTAINS
           CASE (NF90_INT)
              IF ( .NOT.PRESENT(ival) ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Number type claims INTEGER, but ival not present for attribute <name> to module/input_field <module_name>/<field_name>.
+       !   Number type claims INTEGER, but ival not present for attribute <name> to module/input_field <module_name>/<field_name>.
                 !   Contact the developers.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -4186,7 +4200,7 @@ CONTAINS
           CASE (NF90_FLOAT)
              IF ( .NOT.PRESENT(rval) ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Attribute type claims READ, but rval not present for attribute <name> to module/input_field <module_name>/<field_name>.
+       !   Attribute type claims READ, but rval not present for attribute <name> to module/input_field <module_name>/<field_name>.
                 !   Contact the developers.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -4211,7 +4225,7 @@ CONTAINS
           CASE (NF90_CHAR)
              IF ( .NOT.PRESENT(cval) ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Attribute type claims CHARACTER, but cval not present for attribute <name> to module/input_field <module_name>/<field_name>.
+  !   Attribute type claims CHARACTER, but cval not present for attribute <name> to module/input_field <module_name>/<field_name>.
                 !   Contact the developers.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -4560,9 +4574,6 @@ END MODULE diag_manager_mod
 !!#output files
 !!"unstructured_diag_test", 1, "days", 1, "days", "time",
 !!#output variables
-!!"UG_unit_test", "unstructured_real_scalar_field_data", "rsf_diag_1", "unstructured_diag_test", "all", .TRUE., "none", 1,
-!!"UG_unit_test", "unstructured_real_1D_field_data", "unstructured_real_1D_field_data", "unstructured_diag_test", "all", .TRUE., "none", 1,
-!!"UG_unit_test", "unstructured_real_2D_field_data", "unstructured_real_2D_field_data", "unstructured_diag_test", "all", .TRUE., "none", 1,
 !--------------------------------------------------------------------------------------------------
 PROGRAM test
   ! This program runs only one of many possible tests with each execution.
@@ -4648,28 +4659,28 @@ PROGRAM test
   INTEGER :: id_nv, id_nv_init
 
 !!!!!! Stuff for unstrctured grid
-    integer(INT_KIND)              :: nx = 8                               !<Total number of grid points in the x-dimension (longitude?)
-    integer(INT_KIND)              :: ny = 8                               !<Total number of grid points in the y-dimension (latitude?)
-    integer(INT_KIND)              :: nz = 2                               !<Total number of grid points in the z-dimension (height)
-    integer(INT_KIND)              :: nt = 2                               !<Total number of time grid points.
-    integer(INT_KIND)              :: io_tile_factor = 1                   !< The IO tile factor
-    integer(INT_KIND)              :: halo = 2                             !<Number of grid points in the halo???
-    integer(INT_KIND)              :: ntiles_x = 1                         !<Number of tiles in the x-direction (A 2D grid of tiles is used in this test.)
-    integer(INT_KIND)              :: ntiles_y = 2                         !<Number of tiles in the y-direction (A 2D grid of tiles is used in this test.)
-    integer(INT_KIND)              :: total_num_tiles                      !<The total number of tiles for the run (= ntiles_x*ntiles_y)
-    integer(INT_KIND)              :: stackmax = 1500000                   !<Default size to which the mpp stack will be set.
-    integer(INT_KIND)              :: stackmaxd = 500000                   !<Default size to which the mpp_domains stack will be set.
-    logical(INT_KIND)              :: debug = .false.                      !<Flag to print debugging information.
+    integer(INT_KIND)              :: nx = 8              !<Total number of grid points in the x-dimension (longitude?)
+    integer(INT_KIND)              :: ny = 8              !<Total number of grid points in the y-dimension (latitude?)
+    integer(INT_KIND)              :: nz = 2              !<Total number of grid points in the z-dimension (height)
+    integer(INT_KIND)              :: nt = 2              !<Total number of time grid points.
+    integer(INT_KIND)              :: io_tile_factor = 1  !< The IO tile factor
+    integer(INT_KIND)              :: halo = 2            !<Number of grid points in the halo???
+    integer(INT_KIND)              :: ntiles_x = 1 !<Number of tiles in the x-direction (A 2D grid of tiles is used in this test.)
+    integer(INT_KIND)              :: ntiles_y = 2 !<Number of tiles in the y-direction (A 2D grid of tiles is used in this test.)
+    integer(INT_KIND)              :: total_num_tiles     !<The total number of tiles for the run (= ntiles_x*ntiles_y)
+    integer(INT_KIND)              :: stackmax = 1500000  !<Default size to which the mpp stack will be set.
+    integer(INT_KIND)              :: stackmaxd = 500000  !<Default size to which the mpp_domains stack will be set.
+    logical(INT_KIND)              :: debug = .false.     !<Flag to print debugging information.
     character(len=64)              :: test_file = "test_unstructured_grid" !<Base filename for the unit tests.
-    character(len=64)              :: iospec = '-F cachea'                 !<Something cray related ???
-    integer(INT_KIND)              :: pack_size = 1                        !<(Number of bits in real(DOUBLE_KIND))/(Number of bits in real)
-    integer(INT_KIND)              :: npes                                 !<Total number of ranks in the current pelist.
-    integer(INT_KIND)              :: io_status                            !<Namelist read error code.
-    real(DOUBLE_KIND)              :: doubledata = 0.0                     !<Used to determine pack_size.  This must be kind=DOUBLE_KIND.
-    real                           :: realdata = 0.0                       !<Used to determine pack_size.  Do not specify a kind parameter.
-    integer(INT_KIND)              :: funit = 7                            !<File unit.
-    logical(INT_KIND)              :: fopened                              !<Flag telling if a file is already open.
-    type(time_type)                :: diag_time                            !<
+    character(len=64)              :: iospec = '-F cachea'!<Something cray related ???
+    integer(INT_KIND)              :: pack_size = 1       !<(Number of bits in real(DOUBLE_KIND))/(Number of bits in real)
+    integer(INT_KIND)              :: npes                !<Total number of ranks in the current pelist.
+    integer(INT_KIND)              :: io_status           !<Namelist read error code.
+    real(DOUBLE_KIND)              :: doubledata = 0.0    !<Used to determine pack_size.  This must be kind=DOUBLE_KIND.
+    real                           :: realdata = 0.0      !<Used to determine pack_size.  Do not specify a kind parameter.
+    integer(INT_KIND)              :: funit = 7           !<File unit.
+    logical(INT_KIND)              :: fopened             !<Flag telling if a file is already open.
+    type(time_type)                :: diag_time           !<
 
     integer(INT_KIND)              :: output_unit=6
 !!!!!!
@@ -4814,14 +4825,14 @@ else
   ALLOCATE(pfull(nlev), bk(nlev), phalf(nlev+1))
 
   ALLOCATE(lon1(is1:ie1), lat1(js1:je1), lonb1(is1:ie1+1), latb1(js1:je1+1))
-  CALL compute_grid(nlon1, nlat1, is1, ie1, js1, je1, lon_global1, lat_global1, lonb_global1, latb_global1, lon1, lat1, lonb1, latb1)
+  CALL compute_grid(nlon1, nlat1,is1,ie1,js1,je1, lon_global1, lat_global1, lonb_global1, latb_global1, lon1, lat1, lonb1, latb1)
   CALL mpp_define_domains((/1,nlon2,1,nlat2/), layout, Domain2, name='test_diag_manager')
   CALL mpp_get_compute_domain(Domain2, is2, ie2, js2, je2)
   CALL mpp_define_io_domain(Domain1, io_layout)
   CALL mpp_define_io_domain(Domain2, io_layout)
 
   ALLOCATE(lon2(is2:ie2), lat2(js2:je2), lonb2(is2:ie2+1), latb2(js2:je2+1))
-  CALL compute_grid(nlon2, nlat2, is2, ie2, js2, je2, lon_global2, lat_global2, lonb_global2, latb_global2, lon2, lat2, lonb2, latb2)
+  CALL compute_grid(nlon2, nlat2,is2,ie2,js2,je2, lon_global2, lat_global2, lonb_global2, latb_global2, lon2, lat2, lonb2, latb2)
   dp = surf_press/nlev
   DO k=1, nlev+1
      phalf(k) = dp*(k-1)
@@ -4977,13 +4988,17 @@ else
 
      IF ( id_dat1 > 0 ) used = send_data(id_dat1, dat1, Time, err_msg=err_msg)
      IF ( id_dat2 > 0 ) used = send_data(id_dat2, dat1, Time, err_msg=err_msg)
-     IF ( id_dat2h > 0 ) used = send_data(id_dat2h, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
-     IF ( id_dat2h_2 > 0 ) used = send_data(id_dat2h_2, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
+     IF ( id_dat2h > 0 ) &
+        used = send_data(id_dat2h, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
+     IF ( id_dat2h_2 > 0 ) &
+         used = send_data(id_dat2h_2, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
      Time = Time + set_time(0,1)
      IF ( id_dat1 > 0 ) used = send_data(id_dat1, dat1, Time, err_msg=err_msg)
      IF ( id_dat2 > 0 ) used = send_data(id_dat2, dat1, Time, err_msg=err_msg)
-     IF ( id_dat2h > 0 ) used = send_data(id_dat2h, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
-     IF ( id_dat2h_2 > 0 ) used = send_data(id_dat2h_2, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
+     IF ( id_dat2h > 0 ) &
+        used = send_data(id_dat2h, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
+     IF ( id_dat2h_2 > 0 ) &
+         used = send_data(id_dat2h_2, dat2h, Time, is_in=is_in, js_in=js_in, ie_in=ie_in, je_in=je_in, err_msg=err_msg)
   END IF
 
   !-- The following is used to test openMP
@@ -5034,7 +5049,7 @@ else
   IF ( test_number == 13 ) THEN
      IF ( id_dat2_2d > 0 ) used=send_data(id_dat2_2d, dat2(:,:,1), Time, err_msg=err_msg)
      IF ( err_msg == '' ) THEN
-        WRITE (out_unit,'(a)') 'test13: successful if a WARNING message appears that refers to output interval greater than runlength'
+    WRITE (out_unit,'(a)') 'test13: successful if a WARNING message appears that refers to output interval greater than runlength'
      ELSE
         WRITE (out_unit,'(a)') 'test13 fails: err_msg='//TRIM(err_msg)
      END IF
@@ -5412,80 +5427,80 @@ CONTAINS
         integer(INT_KIND),intent(in)  :: ny                 !<The number of grid points in the y-direction.
         integer(INT_KIND),intent(in)  :: nz                 !<The number of grid points in the z-direction.
         integer(INT_KIND),intent(in)  :: npes               !<The total number of ranks used in this test.
-        integer(INT_KIND),intent(in)  :: num_domain_tiles_x !<The total number of domain tiles in the x-dimension for the 2D structured domain in this test.
-        integer(INT_KIND),intent(in)  :: num_domain_tiles_y !<The total number of domain tiles in the y-dimension for the 2D structured domain in this test.
+        integer(INT_KIND),intent(in)  :: num_domain_tiles_x 
+        integer(INT_KIND),intent(in)  :: num_domain_tiles_y 
         type(time_type),intent(inout) :: diag_time          !<Time for diag_manager.
         integer(INT_KIND),intent(in)  :: io_tile_factor     !<I/O tile factor.  See below.
 
        !Local variables
-        integer(INT_KIND)                              :: num_domain_tiles                           !<The total number of domain tiles for the 2D structured domain in this test.
-        integer(INT_KIND)                              :: npes_per_domain_tile                       !<The number of ranks per domain tile for the 2D structured domain.
-        integer(INT_KIND)                              :: my_domain_tile_id                          !<The 2D structured domain tile id for the current rank.
-        logical(INT_KIND)                              :: is_domain_tile_root                        !<Flag telling if the current rank is the root rank of its associated 2D structured domain tile.
-        integer(INT_KIND),dimension(2)                 :: layout_for_full_domain                     !<Rank layout (2D grid) for the full 2D structured domain. Example: 16 ranks -> (16,1) or (8,2) or (4,4) or (2,8) or (1,16)
-        integer(INT_KIND),dimension(:),allocatable     :: pe_start                                   !<Array holding the smallest rank id assigned to each 2D structured domain tile.
-        integer(INT_KIND),dimension(:),allocatable     :: pe_end                                     !<Array holding the largest rank id assigned to each 2D structured domain tile.
-        integer(INT_KIND)                              :: x_grid_points_per_domain_tile              !<The number of grid points in the x-dimension on each 2D structured domain tile.
-        integer(INT_KIND)                              :: y_grid_points_per_domain_tile              !<The number of grid points in the y-dimension on each 2D structured domain tile.
-        integer(INT_KIND),dimension(:,:),allocatable   :: global_indices                             !<Required to define the 2D structured domain.
-        integer(INT_KIND),dimension(:,:),allocatable   :: layout2D                                   !<Required to define the 2D structured domain.
-        type(domain2D)                                 :: domain_2D                                  !<A structured 2D domain.
-        logical(INT_KIND),dimension(:,:,:),allocatable :: land_mask                                  !<A toy mask.
-        integer(INT_KIND),dimension(:),allocatable     :: num_non_masked_grid_points_per_domain_tile !<Total number of non-masked grid points on each 2D structured domain tile.
-        integer(INT_KIND)                              :: mask_counter                               !<Counting variable.
-        integer(INT_KIND)                              :: num_non_masked_grid_points                 !<Total number of non-masked grid points for the 2D structured domain.
-        integer(INT_KIND),dimension(:),allocatable     :: num_land_tiles_per_non_masked_grid_point   !<Number of land tiles per non-masked grid point for the 2D structured domain.
-        integer(INT_KIND)                              :: num_ranks_using_unstructured_grid          !<Number of ranks using the unstructured domain.
-        integer(INT_KIND),dimension(:),allocatable     :: unstructured_grid_point_index_map          !<Array that maps indices between the 2D structured and unstructured domains.
-        type(domainUG)                                 :: domain_ug                                  !<An unstructured mpp domain.
-        integer(INT_KIND),dimension(:),allocatable     :: unstructured_axis_data                     !<Data that is registered to the restart file for the unstructured axis.
-        integer(INT_KIND)                              :: unstructured_axis_data_size                !<Size of the unstructured axis data array.
-        character(len=256)                             :: unstructured_axis_name                     !<Name for the unstructured axis.
-        real,dimension(:),allocatable                  :: x_axis_data                                !<Data for the x-axis that is registered to the restart file.
-        real,dimension(:),allocatable                  :: y_axis_data                                !<Data for the y-axis that is registered to the restart file.
-        real,dimension(:),allocatable                  :: z_axis_data                                !<Data for the z-axis that is registered to the restart file.
-        real                                           :: unstructured_real_scalar_field_data_ref    !<Reference test data for an unstructured real scalar field.
-        real,dimension(:),allocatable                  :: unstructured_real_1D_field_data_ref        !<Reference test data for an unstructured real 1D field.
-        real,dimension(:,:),allocatable                :: unstructured_real_2D_field_data_ref        !<Reference test data for an unstructured real 2D field.
-        real,dimension(:,:,:),allocatable              :: unstructured_real_3D_field_data_ref        !<Reference test data for an unstructured real 3D field.
-        integer                                        :: unstructured_int_scalar_field_data_ref     !<Reference test data for an unstructured integer scalar field.
-        integer,dimension(:),allocatable               :: unstructured_int_1D_field_data_ref         !<Reference test data for an unstructured integer 1D field.
-        integer,dimension(:,:),allocatable             :: unstructured_int_2D_field_data_ref         !<Reference test data for an unstructured integer 2D field.
-        character(len=256)                             :: unstructured_real_scalar_field_name        !<Name for an unstructured real scalar field.
-        real                                           :: unstructured_real_scalar_field_data        !<Data for an unstructured real scalar field.
-        character(len=256)                             :: unstructured_real_1D_field_name            !<Name for an unstructured real 1D field.
-        real,dimension(:),allocatable                  :: unstructured_real_1D_field_data            !<Data for an unstructured real 1D field.
-        character(len=256)                             :: unstructured_real_2D_field_name            !<Name for an unstructured real 2D field.
-        real,dimension(:,:),allocatable                :: unstructured_real_2D_field_data            !<Data for an unstructured real 2D field.
-        character(len=256)                             :: unstructured_real_3D_field_name            !<Name for an unstructured real 3D field.
-        real,dimension(:,:,:),allocatable              :: unstructured_real_3D_field_data            !<Data for an unstructured real 3D field.
-        character(len=256)                             :: unstructured_int_scalar_field_name         !<Name for an unstructured integer scalar field.
-        integer                                        :: unstructured_int_scalar_field_data         !<Data for an unstructured integer scalar field.
-        character(len=256)                             :: unstructured_int_1D_field_name             !<Name for an unstructured integer 1D field.
-        integer,dimension(:),allocatable               :: unstructured_int_1D_field_data             !<Data for an unstructured integer 1D field.
-        character(len=256)                             :: unstructured_int_2D_field_name             !<Name for an unstructured integer 2D field.
-        character(len=100)                             :: unstructured_1d_alt                       !<Name of the unstrucutred 1D field if L>1
-        integer,dimension(:,:),allocatable             :: unstructured_int_2D_field_data             !<Data for an unstructured integer 2D field.
-       integer(INT_KIND),allocatable,dimension(:)      :: unstructured_axis_diag_id                  !<Id returned for the unstructured axis by diag_axis_init.
-       integer(INT_KIND)                               :: x_axis_diag_id                             !<Id returned for the x-axis by diag_axis_init.
-       integer(INT_KIND)                              :: y_axis_diag_id                             !<Id returned for the y-axis by diag_axis_init.
-       integer(INT_KIND)                              :: z_axis_diag_id                             !<Id returned for the z-axis by diag_axis_init.
+        integer(INT_KIND)                              :: num_domain_tiles                           
+        integer(INT_KIND)                              :: npes_per_domain_tile                       
+        integer(INT_KIND)                              :: my_domain_tile_id                          
+        logical(INT_KIND)                              :: is_domain_tile_root                        
+        integer(INT_KIND),dimension(2)                 :: layout_for_full_domain                     
+        integer(INT_KIND),dimension(:),allocatable     :: pe_start                                   
+        integer(INT_KIND),dimension(:),allocatable     :: pe_end                                     
+        integer(INT_KIND)                              :: x_grid_points_per_domain_tile              
+        integer(INT_KIND)                              :: y_grid_points_per_domain_tile              
+        integer(INT_KIND),dimension(:,:),allocatable   :: global_indices                             
+        integer(INT_KIND),dimension(:,:),allocatable   :: layout2D                                   
+        type(domain2D)                                 :: domain_2D                                  
+        logical(INT_KIND),dimension(:,:,:),allocatable :: land_mask                                  
+        integer(INT_KIND),dimension(:),allocatable     :: num_non_masked_grid_points_per_domain_tile 
+        integer(INT_KIND)                              :: mask_counter                               
+        integer(INT_KIND)                              :: num_non_masked_grid_points                 
+        integer(INT_KIND),dimension(:),allocatable     :: num_land_tiles_per_non_masked_grid_point   
+        integer(INT_KIND)                              :: num_ranks_using_unstructured_grid          
+        integer(INT_KIND),dimension(:),allocatable     :: unstructured_grid_point_index_map          
+        type(domainUG)                                 :: domain_ug                                  
+        integer(INT_KIND),dimension(:),allocatable     :: unstructured_axis_data                     
+        integer(INT_KIND)                              :: unstructured_axis_data_size                
+        character(len=256)                             :: unstructured_axis_name                     
+        real,dimension(:),allocatable                  :: x_axis_data                                
+        real,dimension(:),allocatable                  :: y_axis_data                                
+        real,dimension(:),allocatable                  :: z_axis_data                                
+        real                                           :: unstructured_real_scalar_field_data_ref    
+        real,dimension(:),allocatable                  :: unstructured_real_1D_field_data_ref        
+        real,dimension(:,:),allocatable                :: unstructured_real_2D_field_data_ref        
+        real,dimension(:,:,:),allocatable              :: unstructured_real_3D_field_data_ref        
+        integer                                        :: unstructured_int_scalar_field_data_ref     
+        integer,dimension(:),allocatable               :: unstructured_int_1D_field_data_ref         
+        integer,dimension(:,:),allocatable             :: unstructured_int_2D_field_data_ref         
+        character(len=256)                             :: unstructured_real_scalar_field_name        
+        real                                           :: unstructured_real_scalar_field_data        
+        character(len=256)                             :: unstructured_real_1D_field_name            
+        real,dimension(:),allocatable                  :: unstructured_real_1D_field_data            
+        character(len=256)                             :: unstructured_real_2D_field_name            
+        real,dimension(:,:),allocatable                :: unstructured_real_2D_field_data            
+        character(len=256)                             :: unstructured_real_3D_field_name            
+        real,dimension(:,:,:),allocatable              :: unstructured_real_3D_field_data            
+        character(len=256)                             :: unstructured_int_scalar_field_name         
+        integer                                        :: unstructured_int_scalar_field_data         
+        character(len=256)                             :: unstructured_int_1D_field_name             
+        integer,dimension(:),allocatable               :: unstructured_int_1D_field_data             
+        character(len=256)                             :: unstructured_int_2D_field_name             
+        character(len=100)                             :: unstructured_1d_alt                       !
+        integer,dimension(:,:),allocatable             :: unstructured_int_2D_field_data             
+       integer(INT_KIND),allocatable,dimension(:)      :: unstructured_axis_diag_id                  
+       integer(INT_KIND)                               :: x_axis_diag_id                             
+       integer(INT_KIND)                              :: y_axis_diag_id                             !
+       integer(INT_KIND)                              :: z_axis_diag_id                             !
        real,allocatable,dimension(:) :: lat, lon
        integer(INT_KIND)             :: idlat
        integer(INT_KIND)                              :: idlon
-       integer(INT_KIND)                              :: rsf_diag_id                                !<Id returned for a real scalar field associated with the unstructured grid by
+       integer(INT_KIND)                              :: rsf_diag_id                                !
                                 !!register_diag_field.
-       integer(INT_KIND),allocatable,dimension(:)     :: rsf_diag_1d_id                             !<Id returned for a real 1D array  field associated with the unstructured grid by                                                                                                     !!register_diag_field.
-       integer(INT_KIND)                              :: rsf_diag_2d_id                             !<Id returned for a real 2D array  field associated with the unstructured grid by                                                                                                     !!register_diag_field.
-        integer(INT_KIND)                              :: num_diag_time_steps                        !<Number of timesteps (to simulate the model running).
-        type(time_type)                                :: diag_time_start                            !<Starting time for the test.
-        type(time_type)                                :: diag_time_step                             !<Time step for the test.
-        logical(INT_KIND)                              :: used                                       !<Return value from send data.
+       integer(INT_KIND),allocatable,dimension(:)     :: rsf_diag_1d_id                             !
+       integer(INT_KIND)                              :: rsf_diag_2d_id                             !
+        integer(INT_KIND)                              :: num_diag_time_steps                        
+        type(time_type)                                :: diag_time_start                            
+        type(time_type)                                :: diag_time_step                             
+        logical(INT_KIND)                              :: used                                       
 
-        integer(INT_KIND)                              :: i                                          !<Loop variable.
-        integer(INT_KIND)                              :: j                                          !<Loop variable.
-        integer(INT_KIND)                              :: k,l=1                                          !<Loop variable.
-        integer(INT_KIND)                              :: p                                          !<Counting variable.
+        integer(INT_KIND)                              :: i                                          
+        integer(INT_KIND)                              :: j                                          
+        integer(INT_KIND)                              :: k,l=1                                      
+        integer(INT_KIND)                              :: p                                          
 
        !Needed to define the 2D structured domain but never used.
         integer(INT_KIND)              :: ncontacts
@@ -5805,13 +5820,15 @@ allocate(rsf_diag_1d_id(1))
         unstructured_real_scalar_field_data_ref = 1234.5678*real(l)
 
        !real 1D field.
-        if (.not.allocated(unstructured_real_1D_field_data_ref)) allocate(unstructured_real_1D_field_data_ref(unstructured_axis_data_size))
+        if (.not.allocated(unstructured_real_1D_field_data_ref)) &
+                allocate(unstructured_real_1D_field_data_ref(unstructured_axis_data_size))
         do i = 1,unstructured_axis_data_size
             unstructured_real_1D_field_data_ref(i) = real(i) *real(i)+0.1*(mpp_pe()+1)
         enddo
 
        !real 2D field.
-        if (.not.allocated(unstructured_real_2D_field_data_ref)) allocate(unstructured_real_2D_field_data_ref(unstructured_axis_data_size,nz))
+        if (.not.allocated(unstructured_real_2D_field_data_ref)) &
+              allocate(unstructured_real_2D_field_data_ref(unstructured_axis_data_size,nz))
         do j = 1,nz
             do i = 1,unstructured_axis_data_size
                 unstructured_real_2D_field_data_ref(i,j) = real(j)+0.1*(mpp_pe()+1.0)
@@ -5821,30 +5838,20 @@ allocate(rsf_diag_1d_id(1))
             enddo
         enddo
 
-       !real 3D field.
-!       if(.not.allocated(unstructured_real_3D_field_data_ref) allocate(unstructured_real_3D_field_data_ref(unstructured_axis_data_size,nz,cc_axis_size))
-!       do k = 1,cc_axis_size
-!           do j = 1,nz
-!               do i = 1,unstructured_axis_data_size
-!                   unstructured_real_3D_field_data_ref(i,j,k) = -1.0*real((k-1)*nz* &
-!                                                                unstructured_axis_data_size+(j-1)* &
-!                                                                unstructured_axis_data_size+i) &
-!                                                                + 2.2222222
-!               enddo
-!           enddo
-!       enddo
 
        !integer scalar field.
         unstructured_int_scalar_field_data_ref = 7654321*L
 
        !integer 1D field.
-        if (.not.allocated(unstructured_int_1D_field_data_ref)) allocate(unstructured_int_1D_field_data_ref(unstructured_axis_data_size))
+        if (.not.allocated(unstructured_int_1D_field_data_ref)) &
+              allocate(unstructured_int_1D_field_data_ref(unstructured_axis_data_size))
         do i = 1,unstructured_axis_data_size
             unstructured_int_1D_field_data_ref(i) = i - 8*l
         enddo
 
        !integer 2D field.
-        if (.not.allocated(unstructured_int_2D_field_data_ref)) allocate(unstructured_int_2D_field_data_ref(unstructured_axis_data_size,nz))
+        if (.not.allocated(unstructured_int_2D_field_data_ref)) &
+            allocate(unstructured_int_2D_field_data_ref(unstructured_axis_data_size,nz))
         do j = 1,nz
             do i = 1,unstructured_axis_data_size
                 unstructured_int_2D_field_data_ref(i,j) = -1*((j-1)*unstructured_axis_data_size+i) + 2*L
@@ -5913,44 +5920,39 @@ ENDIF !L.ne.1
        !Add a real 1D field to the restart file.  This field is of the form:
        !field = field(unstructured).
         unstructured_real_1D_field_name = "unstructured_real_1D_field_1"
-        if (.not.allocated(unstructured_real_1D_field_data)) allocate(unstructured_real_1D_field_data(unstructured_axis_data_size))
-        unstructured_real_1D_field_data = unstructured_real_1D_field_data_ref
+     if (.not.allocated(unstructured_real_1D_field_data)) allocate(unstructured_real_1D_field_data(unstructured_axis_data_size))
+     unstructured_real_1D_field_data = unstructured_real_1D_field_data_ref
 
-       !Add a real 2D field to the restart file.  This field is of the form:
-       !field = field(unstructured,z).
-        unstructured_real_2D_field_name = "unstructured_real_2D_field_1"
-       if (.not.allocated(unstructured_real_2D_field_data)) allocate(unstructured_real_2D_field_data(unstructured_axis_data_size,nz))
-       unstructured_real_2D_field_data = unstructured_real_2D_field_data_ref
-!       allocate(unstructured_real_2D_field_data(unstructured_axis_data_size,nx))
-!       unstructured_real_2D_field_data = 1
+    !Add a real 2D field to the restart file.  This field is of the form:
+    !field = field(unstructured,z).
+     unstructured_real_2D_field_name = "unstructured_real_2D_field_1"
+    if (.not.allocated(unstructured_real_2D_field_data)) allocate(unstructured_real_2D_field_data(unstructured_axis_data_size,nz))
+    unstructured_real_2D_field_data = unstructured_real_2D_field_data_ref
+!    allocate(unstructured_real_2D_field_data(unstructured_axis_data_size,nx))
+!    unstructured_real_2D_field_data = 1
 
-       !Add a real 3D field to the restart file.  This field is of the form:
-       !field = field(unstructured,z,cc).
-!       unstructured_real_3D_field_name = "unstructured_real_3D_field_1"
-!       if (.not.allocated(unstructured_real_3D_field_data)) allocate(unstructured_real_3D_field_data(unstructured_axis_data_size,nz,cc_axis_size))
-!       unstructured_real_3D_field_data = unstructured_real_3D_field_data_ref
 
-       !Add an integer scalar field to the restart file.
-        unstructured_int_scalar_field_name = "unstructured_int_scalar_field_1"
-        unstructured_int_scalar_field_data = unstructured_int_scalar_field_data_ref
+    !Add an integer scalar field to the restart file.
+     unstructured_int_scalar_field_name = "unstructured_int_scalar_field_1"
+     unstructured_int_scalar_field_data = unstructured_int_scalar_field_data_ref
 
-       !Add an integer 1D field to the restart file.  This field is of the
-       !from: field = field(unstructured).
-        unstructured_int_1D_field_name = "unstructured_int_1D_field_1"
-        if (.not.allocated(unstructured_int_1D_field_data)) allocate(unstructured_int_1D_field_data(unstructured_axis_data_size))
-        unstructured_int_1D_field_data = unstructured_int_1D_field_data_ref
+    !Add an integer 1D field to the restart file.  This field is of the
+    !from: field = field(unstructured).
+     unstructured_int_1D_field_name = "unstructured_int_1D_field_1"
+     if (.not.allocated(unstructured_int_1D_field_data)) allocate(unstructured_int_1D_field_data(unstructured_axis_data_size))
+     unstructured_int_1D_field_data = unstructured_int_1D_field_data_ref
 
-       !Add an integer 2D field to the restart file.  This field is of the
-       !form: field = field(unstructured,z).
-        unstructured_int_2D_field_name = "unstructured_int_2D_field_1"
-        if (.not.allocated(unstructured_int_2D_field_data)) allocate(unstructured_int_2D_field_data(unstructured_axis_data_size,nz))
-        unstructured_int_2D_field_data = unstructured_int_2D_field_data_ref
+    !Add an integer 2D field to the restart file.  This field is of the
+    !form: field = field(unstructured,z).
+     unstructured_int_2D_field_name = "unstructured_int_2D_field_1"
+     if (.not.allocated(unstructured_int_2D_field_data)) allocate(unstructured_int_2D_field_data(unstructured_axis_data_size,nz))
+     unstructured_int_2D_field_data = unstructured_int_2D_field_data_ref
 
-       !Simulate the model timesteps, so that diagnostics may be written
-       !out.
-        num_diag_time_steps = 4
-        diag_time_step = set_time(12*3600)
-        diag_time_start = diag_time
+    !Simulate the model timesteps, so that diagnostics may be written
+    !out.
+     num_diag_time_steps = 4
+     diag_time_step = set_time(12*3600)
+     diag_time_start = diag_time
 ! used = send_data(idlat,lat,diag_time)
 ! used = send_data(idlon,lon,diag_time)
         do i = 1,num_diag_time_steps

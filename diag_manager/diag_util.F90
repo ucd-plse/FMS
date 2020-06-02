@@ -187,7 +187,7 @@ CONTAINS
     REAL, ALLOCATABLE :: subaxis_x(:), subaxis_y(:), subaxis_z(:) !containing local coordinates in x,y,z axes
     CHARACTER(len=128) :: msg
     INTEGER :: ishift, jshift
-    INTEGER :: grv !< Value used to determine if the region defined in the diag_table is for the whole axis, or a sub-axis
+    INTEGER :: grv !< Value used to determine if the region defined in the diag_table is for the whole axis, or a sub-ax
     CHARACTER(len=128), DIMENSION(2) :: axis_domain_name
 
     !initilization for local output
@@ -824,7 +824,8 @@ CONTAINS
 
   ! <SUBROUTINE NAME="check_out_of_bounds">
   !   <OVERVIEW>
-  !     Checks if the array indices for <TT>output_fields(out_num)</TT> are outside the <TT>output_fields(out_num)%buffer</TT> upper
+  !     Checks if the array indices for <TT>output_fields(out_num)</TT> are outside the <TT>output_fields(out_num)%
+  !                                                                                                   buffer</TT> upper
   !     and lower bounds.
   !   </OVERVIEW>
   !   <TEMPLATE>
@@ -833,7 +834,8 @@ CONTAINS
   !   <DESCRIPTION>
   !     <TT>check_out_of_bounds</TT> verifies the array min and max indices in the x, y, and z directions of <TT>
   !     output_fields(out_num)</TT> are not outside the upper and lower array boundaries of
-  !     <TT>output_fields(out_num)%buffer</TT>.  If the min and max indices are outside the upper and lower bounds of the buffer
+  !     <TT>output_fields(out_num)%buffer</TT>.  If the min and max indices are outside the upper and lower bounds
+  !  of the buffer
   !     array, then <TT>check_out_of_bounds</TT> returns an error string.
   !   </DESCRIPTION>
   !   <IN NAME="out_num" TYPE="INTEGER">
@@ -843,7 +845,8 @@ CONTAINS
   !     Input field ID number.
   !   </IN>
   !   <OUT NAME="err_msg" TYPE="CHARACTER(len=*)">
-  !     Return status of <TT>check_out_of_bounds</TT>.  An empty error string indicates the x, y, and z indices are not outside the
+  !     Return status of <TT>check_out_of_bounds</TT>.  An empty error string indicates the x, y, and z indices are not
+  ! outside the
   !     buffer array boundaries.
   !   </OUT>
   SUBROUTINE check_out_of_bounds(out_num, diag_field_id, err_msg)
@@ -891,17 +894,18 @@ CONTAINS
 
   ! <SUBROUTINE NAME="check_bounds_are_exact_dynamic">
   !   <OVERVIEW>
-  !     Check if the array indices for <TT>output_fields(out_num)</TT> are equal to the <TT>output_fields(out_num)%buffer</TT>
+  !     Check if the array indices for <TT>output_fields(out_num)</TT> are equal to the <TT>output_fields(out_num)
+  !         %buffer</TT>
   !     upper and lower bounds.
   !   </OVERVIEW>
   !   <TEMPLATE>
   !     SUBROUTINE check_bounds_are_exact_dynamic(out_num, diag_field_id, Time, err_msg)
   !   </TEMPLATE>
   !   <DESCRIPTION>
-  !     <TT>check_bounds_are_exact_dynamic</TT> checks if the min and max array indices for <TT>output_fields(out_num)</TT> are
-  !     equal to the upper and lower bounds of <TT>output_fields(out_num)%buffer</TT>.  This check is only performed if
-  !     <TT>output_fields(out_num)%Time_of_prev_field_data</TT> doesn't equal <TT>Time</TT> or <TT>Time_zero</TT>.
-  !     <TT>check_bounds_are_exact_dynamic</TT> returns an error string if the array indices do not match the buffer bounds.
+  !  <TT>check_bounds_are_exact_dynamic</TT> checks if the min and max array indices for <TT>output_fields(out_num)</TT>
+  !  are equal to the upper and lower bounds of <TT>output_fields(out_num)%buffer</TT>. This check is only performed if
+  !  <TT>output_fields(out_num)%Time_of_prev_field_data</TT> doesn't equal <TT>Time</TT> or <TT>Time_zero</TT>.
+  !  <TT>check_bounds_are_exact_dynamic</TT> returns an error string if the array indices do not match the buffer bounds.
   !   </DESCRIPTION>
   !   <IN NAME="out_num" TYPE="INTEGER">
   !     Output field ID number.
@@ -910,11 +914,11 @@ CONTAINS
   !     Input field ID number.
   !   </IN>
   !   <IN NAME="Time" TYPE="TYPE(time_type)">
-  !     Time to use in check.  The check is only performed if <TT>output_fields(out_num)%Time_of_prev_field_data</TT> is not
+  ! Time to use in check.  The check is only performed if <TT>output_fields(out_num)%Time_of_prev_field_data</TT> is not
   !     equal to <TT>Time</TT> or <TT>Time_zero</TT>.
   !   </IN>
-  !   <OUT NAME="err_msg" TYPE="CHARACTER(len=*)">
-  !     Return status of <TT>check_bounds_are_exact_dynamic</TT>.  An empty error string indicates the x, y, and z indices are
+  !  <OUT NAME="err_msg" TYPE="CHARACTER(len=*)">
+  !Return status of <TT>check_bounds_are_exact_dynamic</TT>.  An empty error string indicates the x, y, and z indices are
   !     equal to the buffer array boundaries.
   !   </OUT>
   SUBROUTINE check_bounds_are_exact_dynamic(out_num, diag_field_id, Time, err_msg)
@@ -979,7 +983,8 @@ CONTAINS
 
   ! <SUBROUTINE NAME="check_bounds_are_exact_static">
   !   <OVERVIEW>
-  !     Check if the array indices for <TT>output_fields(out_num)</TT> are equal to the <TT>output_fields(out_num)%buffer</TT>
+  !     Check if the array indices for <TT>output_fields(out_num)</TT> are equal to the <TT>output_fields(out_num)
+  !     %buffer</TT>
   !     upper and lower bounds.
   !   </OVERVIEW>
   !   <TEMPLATE>
@@ -1051,7 +1056,7 @@ CONTAINS
   !   <IN NAME="log_name" TYPE="CHARACTER(len=*)">Long name for time axis.</IN>
   !   <IN NAME="tile_count" TYPE="INTEGER">Tile number.</IN>
   !   <IN NAME="new_file_freq" TYPE="INTEGER, OPTIONAL">How often a new file is to be created.</IN>
-  !   <IN NAME="new_file_freq_units" TYPE="INTEGER, OPTIONAL">The new file frequency unit.  (MIN, HOURS, DAYS, etc.)</IN>
+  !  <IN NAME="new_file_freq_units" TYPE="INTEGER, OPTIONAL">The new file frequency unit.  (MIN, HOURS, DAYS, etc.)</IN>
   !   <IN NAME="start_time" TYPE="TYPE(time_type), OPTIONAL">Time when the file is to start </IN>
   !   <IN NAME="file_duration" TYPE="INTEGER, OPTIONAL">How long file is to be used.</IN>
   !   <IN NAME="file_duration_units" TYPE="INTEGER, OPTIONAL">File duration unit.  (MIN, HOURS, DAYS, etc.)</IN>
@@ -1273,7 +1278,7 @@ CONTAINS
   !     TYPE(time_type) FUNCTION diag_time_inc(time, output_freq, output_units, err_msg)
   !   </TEMPLATE>
   !   <DESCRIPTION>
-  !     Return the next time data/file is to be written.  This value is based on the current time and the frequency and units.
+  !  Return the next time data/file is to be written.  This value is based on the current time and the frequency and units.
   !     Function completed successful if the optional <TT>err_msg</TT> is empty.
   !   </DESCRIPTION>
   !   <IN NAME="time" TYPE="TYPE(time_type)">Current model time.</IN>
@@ -1357,7 +1362,8 @@ CONTAINS
   !     INTEGER FUNCTION fild_file(name, time_count)
   !   </TEMPLATE>
   !   <DESCRIPTION>
-  !     Find the file number for the file name and tile number given.  A return value of <TT>-1</TT> indicates the file was not found.
+  !     Find the file number for the file name and tile number given.  A return value of <TT>-1</TT> indicates
+  !  the file was not found.
   !   </DESCRIPTION>
   !   <IN NAME="name=" TYPE="CHARACTER(len=*)">File name.</IN>
   !   <IN NAME="tile_count" TYPE="INTEGER">Tile number.</IN>
@@ -1386,8 +1392,8 @@ CONTAINS
   !     INTEGER FUNCTION find_input_field(module_name, field_name, tile_count)
   !   </TEMPLATE>
   !   <DESCRIPTION>
-  !     Return the field number for the given module name, field name and tile number.  A return value of <TT>-1</TT> indicates
-  !     the field was not found.
+  !     Return the field number for the given module name, field name and tile number.  A return value of <TT>-1</TT> 
+  !     indicates the field was not found.
   !   </DESCRIPTION>
   !   <IN NAME="module_name" TYPE="CHARACTER(len=*)">Module name.</IN>
   !   <IN NAME="field_name" TYPE="CHARACTER(len=*)">field name.</IN>
@@ -1518,7 +1524,6 @@ CONTAINS
        ELSE
           WRITE (error_msg,'(A,"/",A)') TRIM(module_name),TRIM(field_name)
        END IF
-       ! <ERROR STATUS="FATAL">module_name/field_name <module_name>/<field_name>[/tile_count=<tile_count>] NOT registered</ERROR>
        CALL error_mesg('diag_util_mod::init_output_field',&
             & 'module_name/field_name '//TRIM(error_msg)//' NOT registered', FATAL)
     END IF
@@ -1528,8 +1533,6 @@ CONTAINS
          & input_fields(in_num)%num_output_fields + 1
     IF ( input_fields(in_num)%num_output_fields > max_out_per_in_field ) THEN
        ! <ERROR STATUS="FATAL">
-       !   MAX_OUT_PER_IN_FIELD = <MAX_OUT_PER_IN_FIELD> exceeded for <module_name>/<field_name>, increase MAX_OUT_PER_IN_FIELD
-       !   in the diag_manager_nml namelist.
        ! </ERROR>
        WRITE (UNIT=error_msg,FMT=*) MAX_OUT_PER_IN_FIELD
        CALL error_mesg('diag_util_mod::init_output_field',&
@@ -1583,7 +1586,7 @@ CONTAINS
        !   MAX_FIELDS_PER_FILE = <MAX_FIELDS_PER_FILE> exceeded.  Increase MAX_FIELDS_PER_FILE in diag_data.F90.
        ! </ERROR>
        CALL error_mesg('diag_util_mod::init_output_field',&
-            & 'MAX_FIELDS_PER_FILE = '//TRIM(error_msg)//' exceeded.  Increase MAX_FIELDS_PER_FILE in diag_data.F90.', FATAL)
+        & 'MAX_FIELDS_PER_FILE = '//TRIM(error_msg)//' exceeded.  Increase MAX_FIELDS_PER_FILE in diag_data.F90.', FATAL)
     END IF
     num_fields = files(file_num)%num_fields
     files(file_num)%fields(num_fields) = out_num
@@ -1770,7 +1773,7 @@ CONTAINS
   !     SUBROUTINE opening_file(file, time)
   !   </TEMPLATE>
   !   <DESCRIPTION>
-  !     Open file for output, and write the meta data.  <BB>Warning:</BB> Assumes all data structures have been fully initialized.
+  !Open file for output, and write the meta data.<BB>Warning:</BB> Assumes all data structures have been fully initialized.
   !   </DESCRIPTION>
   !   <IN NAME="file" TYPE="INTEGER">File ID.</IN>
   !   <IN NAME="tile" TYPE="TYPE(time_type)">Time for the file time stamp</IN>
@@ -2045,7 +2048,7 @@ CONTAINS
                 ! </ERROR>
                 CALL error_mesg('diag_util_mod::opening_file','file '//&
                      & TRIM(files(file)%name)//' can NOT have BOTH time average AND instantaneous fields.'//&
-                     & ' Create a new file or set mix_snapshot_average_fields=.TRUE. in the namelist diag_manager_nml.' , FATAL)
+            & ' Create a new file or set mix_snapshot_average_fields=.TRUE. in the namelist diag_manager_nml.' , FATAL)
              END IF
           END IF
        END IF
@@ -2349,7 +2352,7 @@ CONTAINS
   !     REAL FUNCTION get_date_dif(t2, t1, units)
   !   </TEMPLATE>
   !   <DESCRIPTION>
-  !     Calculate and return the difference between the two times given in the unit given using the function <TT>t2 - t1</TT>.
+  ! Calculate and return the difference between the two times given in the unit given using the function <TT>t2 - t1</TT>.
   !   </DESCRIPTION>
   !   <IN NAME="t2" TYPE="TYPE(time_type)">Most recent time.</IN>
   !   <IN NAME="t1" TYPE="TYPE(time_type)">Most distant time.</IN>
@@ -2501,7 +2504,8 @@ CONTAINS
   !   </DESCRIPTION>
   !   <IN NAME="file" TYPE="INTEGER">File ID.</IN>
   !   <IN NAME="time" TYPE="TYPE(time_type)">Current model time.</IN>
-  !   <OUT NAME="do_write" TYPE="LOGICAL"><TT>.TRUE.</TT> if file is expecting more data to write, <TT>.FALSE.</TT> otherwise.</OUT>
+  !   <OUT NAME="do_write" TYPE="LOGICAL"><TT>.TRUE.</TT>
+  !  if file is expecting more data to write, <TT>.FALSE.</TT> otherwise.</OUT>
   SUBROUTINE check_and_open(file, time, do_write)
     INTEGER, INTENT(in) :: file
     TYPE(time_type), INTENT(in) :: time
@@ -2530,7 +2534,7 @@ CONTAINS
                 !   check file duration and frequency
                 ! </ERROR>
                 CALL error_mesg('diag_util_mod::check_and_open',&
-                     & files(file)%name//' has close time GREATER than next_open time, check file duration and frequency',FATAL)
+           & files(file)%name//' has close time GREATER than next_open time, check file duration and frequency',FATAL)
              END IF
           END IF ! no need to open new file, simply return file_unit
        END IF
@@ -2794,7 +2798,8 @@ CONTAINS
           ! <ERROR STATUS="FATAL">
           !   Unable to allocate memory for file attributes
           ! </ERROR>
-          IF ( fms_error_handler('diag_util_mod::attribute_init_file', 'Unable to allocate memory for file attributes', err_msg) ) THEN
+          IF ( fms_error_handler('diag_util_mod::attribute_init_file', &
+              'Unable to allocate memory for file attributes', err_msg) ) THEN
              RETURN
           END IF
        ELSE
