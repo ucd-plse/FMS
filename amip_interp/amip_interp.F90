@@ -79,8 +79,8 @@ module amip_interp_mod
 
 use  time_interp_mod, only: time_interp, fraction_of_year
 
-use time_manager_mod, only: time_type, operator(+), operator(>), &
-                             get_date, set_time, set_date
+use time_manager_mod!, only: time_type, operator(+), operator(>), &
+                    !         get_date, set_time, set_date
 
 ! add by JHC
 use get_cal_time_mod, only: get_cal_time
@@ -382,14 +382,14 @@ end type
  logical :: use_ncep_ice = .false.
  logical :: interp_oi_sst = .false.       ! changed to false for regular runs
 
- namelist /amip_interp_nml/ use_ncep_sst, no_anom_sst, use_ncep_ice,  tice_crit, &
-                            interp_oi_sst, data_set, date_out_of_range,          &
-                            use_zonal, teq, tdif, tann, tlag, amip_date,         &
-                            ! add by JHC
-                            sst_pert, sst_pert_type, do_sst_pert,                &
-                            use_daily,                                           &
-                            ! end add by JHC
-                            verbose, i_sst, j_sst, forecast_mode
+! namelist /amip_interp_nml/ use_ncep_sst, no_anom_sst, use_ncep_ice,  tice_crit, &
+!                            interp_oi_sst, data_set, date_out_of_range,          &
+!                            use_zonal, teq, tdif, tann, tlag, amip_date,         &
+!                            ! add by JHC
+!                            sst_pert, sst_pert_type, do_sst_pert,                &
+!                            use_daily,                                           &
+!                            ! end add by JHC
+!                            verbose, i_sst, j_sst, forecast_mode
 ! </NAMELIST>
 
 
@@ -942,6 +942,14 @@ endif
  subroutine amip_interp_init()
 
    integer :: unit,io,ierr
+ namelist /amip_interp_nml/ use_ncep_sst, no_anom_sst, use_ncep_ice,  tice_crit, &
+                            interp_oi_sst, data_set, date_out_of_range,          &
+                            use_zonal, teq, tdif, tann, tlag, amip_date,         &
+                            ! add by JHC
+                            sst_pert, sst_pert_type, do_sst_pert,                &
+                            use_daily,                                           &
+                            ! end add by JHC
+                            verbose, i_sst, j_sst, forecast_mode
 
 !-----------------------------------------------------------------------
 

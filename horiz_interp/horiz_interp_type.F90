@@ -37,7 +37,7 @@ use mpp_mod, only : mpp_pe, mpp_root_pe, mpp_npes
 use mpp_mod, only : COMM_TAG_1, COMM_TAG_2
 
 implicit none
-private
+!private
 
 
 ! parameter to determine interpolation method
@@ -47,7 +47,7 @@ private
  integer, parameter :: BICUBIC  = 4
 
 public :: CONSERVE, BILINEAR, SPHERICA, BICUBIC
-public :: horiz_interp_type, stats, assignment(=)
+public :: horiz_interp_type, stats!, assignment(=)
 
 interface assignment(=)
   module procedure horiz_interp_type_eq

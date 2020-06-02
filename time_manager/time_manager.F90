@@ -207,6 +207,7 @@ logical :: module_is_initialized = .false.
 private version
 private module_is_initialized
 private error_handler
+private seconds_per_day
 
 !======================================================================
 

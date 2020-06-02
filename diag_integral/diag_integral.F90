@@ -399,8 +399,8 @@ real,dimension(:,:), intent(in), optional :: blon, blat, area_in
 !-------------------------------------------------------------------------------
       call write_version_number (version, tagname)
       logunit = stdlog()
-      if (mpp_pe() == mpp_root_pe() ) &
-                       write (logunit, nml=diag_integral_nml)
+      !if (mpp_pe() == mpp_root_pe() ) &
+      !                 write (logunit, nml=diag_integral_nml)
 
 !-------------------------------------------------------------------------------
 !    save the initial time to time-stamp the integrals which will be
@@ -661,12 +661,14 @@ integer, optional, intent(in) :: is, js
 !     i1, j1, i2, j2  ! location indices of current data in
 !                       processor-global coordinates
 !-------------------------------------------------------------------------------
-      real, dimension (size(data,1),  &
-                       size(data,2)) :: data2
+      !real, dimension (size(data,1),  &
+      !                 size(data,2)) :: data2
+      real, allocatable, dimension(:,:) :: data2
 
       integer :: field
       integer :: i1, j1, i2, j2
 
+      allocate(data2(size(data,1),size(data,2)))
 
 !-------------------------------------------------------------------------------
 !    be sure module has been initialized.
@@ -708,6 +710,7 @@ integer, optional, intent(in) :: is, js
 
 !$OMP END CRITICAL
 
+      deallocate(data2)
 end subroutine sum_field_3d
 
 
@@ -750,8 +753,10 @@ integer, optional, intent(in) :: is, js
 !     i1, j1, i2, j2  ! location indices of current data in
 !                       processor-global coordinates
 !-------------------------------------------------------------------------------
-      real, dimension (size(data,1),size(data,2)) :: data2
+      !real, dimension (size(data,1),size(data,2)) :: data2
+      real, allocatable, dimension(:,:) :: data2
       integer :: field, i1, j1, i2, j2
+      allocate(data2(size(data,1),size(data,2)))
 
 !-------------------------------------------------------------------------------
 !    be sure module has been initialized.
@@ -788,12 +793,13 @@ integer, optional, intent(in) :: is, js
 !$OMP CRITICAL
       field_count (field) = field_count (field) +   &
                             size(data,1)*size(data,2)
-      data2 = vert_diag_integral (data, wt)
+      data2 = vert_diag_integral (data, wt, size(data,1), size(data,2))
       field_sum(field) = field_sum   (field) +  &
                          sum (data2 * area(i1:i2,j1:j2))
 
 !$OMP END CRITICAL
 
+      deallocate(data2)
 end subroutine sum_field_wght_3d
 
 
@@ -1505,16 +1511,19 @@ end function diag_integral_alarm
 !! \param [in] <data> integral field data arrays
 !! \param [in] <wt> integral field weighting functions
 !! \param [out] <data2>
-function vert_diag_integral (data, wt) result (data2)
+function vert_diag_integral (data, wt, ni, nj) result (data2)
 
+integer :: ni, nj, nk
 real, dimension (:,:,:),         intent(in) :: data, wt
-real, dimension (size(data,1),size(data,2)) :: data2
+!real, dimension (size(data,1),size(data,2)) :: data2
+real, dimension (ni,nj) :: data2
 
 !-------------------------------------------------------------------------------
 ! local variables:
 !       wt2
 !-------------------------------------------------------------------------------
-      real, dimension(size(data,1),size(data,2)) :: wt2
+      !real, dimension(size(data,1),size(data,2)) :: wt2
+      real, dimension(ni,nj) :: wt2
 
 !-------------------------------------------------------------------------------
       wt2 = sum(wt,3)

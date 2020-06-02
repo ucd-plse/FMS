@@ -86,9 +86,9 @@ real          :: crit_ydistance = 4.0
                  ! point 
                  ! [ degrees ]
 
-namelist / column_diagnostics_nml /              &
-                                      crit_xdistance, &
-                                      crit_ydistance
+!namelist / column_diagnostics_nml /              &
+!                                      crit_xdistance, &
+!                                      crit_ydistance
 
 !--------------------------------------------------------------------
 !-------- public data  -----
@@ -122,6 +122,9 @@ subroutine column_diagnostics_init
 !    local variables:
 !
       integer    :: unit, ierr, io
+namelist / column_diagnostics_nml /              &
+                                      crit_xdistance, &
+                                      crit_ydistance
 
 !--------------------------------------------------------------------
 !   local variables:

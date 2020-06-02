@@ -86,7 +86,7 @@
       end do
 
       open(unit_nml,file='input.nml', iostat=io_status)
-      read(unit_nml,mpp_domains_nml,iostat=io_status)
+      read(unit=unit_nml,nml=mpp_domains_nml,iostat=io_status)
       close(unit_nml)
 #endif
 

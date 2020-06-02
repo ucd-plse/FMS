@@ -35,15 +35,15 @@ MODULE diag_axis_mod
 
   USE mpp_domains_mod, ONLY: domainUG, domain1d, domain2d, mpp_get_compute_domain,&
        & mpp_get_domain_components, null_domain1d, null_domain2d, null_domainUG,&
-       & OPERATOR(.NE.), mpp_get_global_domain, mpp_get_domain_name
+       & mpp_domain_ne, mpp_get_global_domain, mpp_get_domain_name
   USE fms_mod, ONLY: error_mesg, write_version_number, lowercase, uppercase,&
        & fms_error_handler, FATAL, NOTE
   USE diag_data_mod, ONLY: diag_axis_type, max_subaxes, max_axes,&
        & max_num_axis_sets, max_axis_attributes, debug_diag_manager,&
        & first_send_data_call, diag_atttype
-#ifdef use_netCDF
-  USE netcdf, ONLY: NF90_INT, NF90_FLOAT, NF90_CHAR
-#endif
+!#ifdef use_netCDF
+!  USE netcdf, ONLY: NF90_INT, NF90_FLOAT, NF90_CHAR
+!#endif
 
   IMPLICIT NONE
 
@@ -61,6 +61,9 @@ MODULE diag_axis_mod
   ! Include variable "version" to be written to log file.
 #include<file_version.h>
 
+  integer, parameter :: nf90_char = 2
+  integer, parameter :: nf90_int = 4
+  integer, parameter :: nf90_float = 5
 !----------
 !ug support
   integer(INT_KIND),parameter,public :: DIAG_AXIS_NODOMAIN = 0
@@ -353,7 +356,7 @@ CONTAINS
     END IF
 
     !--- set up the shift value for x-y axis
-    IF ( Axes(diag_axis_init)%Domain .NE. null_domain1d ) THEN
+    IF ( mpp_domain_ne(Axes(diag_axis_init)%Domain,null_domain1d )) THEN
        CALL mpp_get_compute_domain(Axes(diag_axis_init)%Domain, isc, iec)
        CALL mpp_get_global_domain(Axes(diag_axis_init)%Domain, isg, ieg)
        IF ( Axes(diag_axis_init)%length == ieg - isg + 2 ) THEN
@@ -714,7 +717,7 @@ CONTAINS
     INTEGER :: length
 
     CALL valid_id_check(id, 'get_axis_length')
-    IF ( Axes(id)%Domain .NE. null_domain1d ) THEN
+    IF ( mpp_domain_ne(Axes(id)%Domain,null_domain1d) ) THEN
        CALL mpp_get_compute_domain(Axes(id)%Domain,size=length)
        !---one extra point is needed for some case. ( like symmetry domain )
        get_axis_length = length + Axes(id)%shift
@@ -835,7 +838,7 @@ CONTAINS
     INTEGER, INTENT(in) :: id
 
     CALL valid_id_check(id, 'get_domain1d')
-    IF (Axes(id)%Domain .NE. NULL_DOMAIN1D) THEN
+    IF (mpp_domain_ne(Axes(id)%Domain,NULL_DOMAIN1D)) THEN
        get_domain1d = Axes(id)%Domain
     ELSE
        get_domain1d = NULL_DOMAIN1D
@@ -873,7 +876,7 @@ CONTAINS
        IF ( Axes(id)%cart_name == 'X' .OR. Axes(id)%cart_name == 'Y' ) flag = flag + 1
        !     --- both x/y axes found ---
        IF ( flag == 2 ) THEN
-          IF (Axes(id)%Domain2 .NE. NULL_DOMAIN2D) get_domain2d = Axes(id)%Domain2
+          IF (mpp_domain_ne(Axes(id)%Domain2,NULL_DOMAIN2D)) get_domain2d = Axes(id)%Domain2
           EXIT
        END IF
     END DO
@@ -894,7 +897,7 @@ CONTAINS
     INTEGER, INTENT(in) :: id
 
     CALL valid_id_check(id, 'get_domainUG')
-    IF (Axes(id)%DomainUG .NE. NULL_DOMAINUG) THEN
+    IF (mpp_domain_ne(Axes(id)%DomainUG,NULL_DOMAINUG)) THEN
        get_domainUG = Axes(id)%DomainUG
     ELSE
        get_domainUG = NULL_DOMAINUG
@@ -947,9 +950,9 @@ CONTAINS
         elseif (Axes(id(n))%cart_name .eq. "U") then
             UG = .true.
         endif
-        if (Axes(id(n))%Domain2 .ne. null_domain2d) then
+        if (mpp_domain_ne(Axes(id(n))%Domain2,null_domain2d)) then
             uses_domain2D = .true.
-        elseif (Axes(id(n))%DomainUG .ne. null_domainUG) then
+        elseif (mpp_domain_ne(Axes(id(n))%DomainUG,null_domainUG)) then
             uses_domainUG = .true.
         endif
     enddo

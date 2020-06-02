@@ -34,7 +34,7 @@ MODULE diag_output_mod
   USE mpp_domains_mod, ONLY: domain1d, domain2d, mpp_define_domains, mpp_get_pelist,&
        &  mpp_get_global_domain, mpp_get_compute_domains, null_domain1d, null_domain2d,&
        & domainUG, null_domainUG,&
-       & OPERATOR(.NE.), mpp_get_layout, OPERATOR(.EQ.)
+       & mpp_domain_ne, mpp_get_layout, mpp_domain_eq
   USE mpp_mod, ONLY: mpp_npes, mpp_pe
   USE diag_axis_mod, ONLY: diag_axis_init, get_diag_axis, get_axis_length,&
        & get_axis_global_length, get_domain1d, get_domain2d, get_axis_aux, get_tile_count,&
@@ -43,9 +43,9 @@ MODULE diag_output_mod
   USE time_manager_mod, ONLY: get_calendar_type, valid_calendar_types
   USE fms_mod, ONLY: error_mesg, mpp_pe, write_version_number, fms_error_handler, FATAL
 
-#ifdef use_netCDF
-  USE netcdf, ONLY: NF90_INT, NF90_FLOAT, NF90_CHAR
-#endif
+!#ifdef use_netCDF
+!  USE netcdf, ONLY: NF90_INT, NF90_FLOAT, NF90_CHAR
+!#endif
 
   use mpp_domains_mod, only: mpp_get_UG_io_domain
   use mpp_domains_mod, only: mpp_get_UG_domain_npes
@@ -60,6 +60,10 @@ MODULE diag_output_mod
        & diag_field_out, diag_flush, diag_fieldtype, get_diag_global_att, set_diag_global_att
 
   TYPE(diag_global_att_type), SAVE :: diag_global_att
+
+  integer, parameter :: nf90_char = 2
+  integer, parameter :: nf90_int = 4
+  integer, parameter :: nf90_float = 5
 
   INTEGER, PARAMETER      :: NETCDF1 = 1
   INTEGER, PARAMETER      :: mxch  = 128
@@ -141,15 +145,15 @@ CONTAINS
 
 
 !> Check to make sure that only domain2D or domainUG is used.  If both are not null, then FATAL
-    if (domain .NE. NULL_DOMAIN2D .AND. domainU .NE. NULL_DOMAINUG)&
+    if (mpp_domain_ne(domain,NULL_DOMAIN2D) .AND. mpp_domain_ne(domainU,NULL_DOMAINUG))&
           & CALL error_mesg('diag_output_init', "Domain2D and DomainUG can not be used at the same time in "//&
           & trim(file_name), FATAL)
 
     !---- open output file (return file_unit id) -----
-    IF ( domain .NE. NULL_DOMAIN2D ) THEN
+    IF ( mpp_domain_ne(domain,NULL_DOMAIN2D) ) THEN
        CALL mpp_open(file_unit, file_name, action=MPP_OVERWR, form=form,&
             & threading=threading, fileset=fileset, domain=domain)
-    ELSE IF (domainU .NE. NULL_DOMAINUG) THEN
+    ELSE IF (mpp_domain_ne(domainU,NULL_DOMAINUG)) THEN
        CALL mpp_open(file_unit, file_name, action=MPP_OVERWR, form=form,&
             & threading=threading, fileset=fileset, domain_UG=domainU)
     ELSE
@@ -269,7 +273,7 @@ CONTAINS
             & axis_cart_name, axis_direction, axis_edges, Domain, DomainU, axis_data,&
             & num_attributes, attributes)
 
-       IF ( Domain .NE. null_domain1d ) THEN
+       IF ( mpp_domain_ne(Domain,null_domain1d) ) THEN
           IF ( length > 0 ) THEN
              CALL mpp_write_meta(file_unit, Axis_types(num_axis_in_file),&
                   & axis_name, axis_units, axis_long_name, axis_cart_name,&
@@ -285,7 +289,7 @@ CONTAINS
             !pelist will perform the wirte, so a gather of the unstructured
             !axis size and axis data is required.
              if (uppercase(trim(axis_cart_name)) .eq. "U") then
-                 if (DomainU .eq. null_domainUG) then
+                 if (mpp_domain_eq(DomainU,null_domainUG)) then
                      call error_mesg("diag_output_mod::write_axis_meta_data", &
                                      "A non-nul domainUG is required to" &
                                      //" write unstructured axis metadata.", &
@@ -403,7 +407,7 @@ CONTAINS
        time_axis_flag (num_axis_in_file) = .FALSE.
 
        !  ---- write edges axis to file ----
-       IF ( Domain .NE. null_domain1d ) THEN
+       IF ( mpp_domain_ne(Domain,null_domain1d) ) THEN
           ! assume domain decomposition is irregular and loop through all prev and next
           ! domain pointers extracting domain extents.  Assume all pes are used in
           ! decomposition
@@ -830,7 +834,7 @@ CONTAINS
     END IF
 
     !---- output data ----
-    IF ( Field%Domain .NE. null_domain2d ) THEN
+    IF ( mpp_domain_ne(Field%Domain,null_domain2d) ) THEN
        IF( Field%miss_present ) THEN
           CALL mpp_write(file_unit, Field%Field, Field%Domain, DATA, time, &
                       tile_count=Field%tile_count, default_data=Field%miss_pack)
@@ -838,7 +842,7 @@ CONTAINS
           CALL mpp_write(file_unit, Field%Field, Field%Domain, DATA, time, &
                       tile_count=Field%tile_count, default_data=CMOR_MISSING_VALUE)
        END IF
-    ELSEIF ( Field%DomainU .NE. null_domainUG ) THEN
+    ELSEIF ( mpp_domain_ne(Field%DomainU,null_domainUG) ) THEN
        IF( Field%miss_present ) THEN
           CALL mpp_io_unstructured_write(file_unit, Field%Field, Field%DomainU, DATA, tstamp=time, &
                        default_data=Field%miss_pack)

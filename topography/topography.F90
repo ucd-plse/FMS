@@ -96,7 +96,7 @@ end interface
 
    character(len=128) :: topog_file = 'DATA/navy_topography.data', &
                          water_file = 'DATA/navy_pctwater.data'
-   namelist /topography_nml/ topog_file, water_file
+   !namelist /topography_nml/ topog_file, water_file
 ! </NAMELIST>
 
 !-----------------------------------------------------------------------
@@ -913,6 +913,7 @@ end interface
 subroutine read_namelist
 
    integer :: unit, ierr, io
+   namelist /topography_nml/ topog_file, water_file
 
 !  read namelist
 

@@ -227,7 +227,7 @@ use horiz_interp_spherical_mod, only: horiz_interp_spherical_new, horiz_interp_s
 
  logical :: reproduce_siena = .false.
 
- namelist /horiz_interp_nml/ reproduce_siena
+ !namelist /horiz_interp_nml/ reproduce_siena
 
 !-----------------------------------------------------------------------
 ! Include variable "version" to be written to log file.
@@ -248,6 +248,7 @@ contains
 
   subroutine horiz_interp_init
   integer :: unit, ierr, io
+ namelist /horiz_interp_nml/ reproduce_siena
 
   if(module_is_initialized) return
   call write_version_number("HORIZ_INTERP_MOD", version)

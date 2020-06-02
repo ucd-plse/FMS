@@ -54,9 +54,9 @@ module time_interp_external_mod
        mpp_get_times, MPP_RDONLY, MPP_ASCII, default_axis,axistype,fieldtype,atttype, &
        mpp_get_axes, mpp_get_fields, mpp_read, default_field, mpp_close, &
        mpp_get_tavg_info, validtype, mpp_is_valid, mpp_get_file_name
-  use time_manager_mod, only : time_type, get_date, set_date, operator ( >= ) , operator ( + ) , days_in_month, &
-                            operator( - ), operator ( / ) , days_in_year, increment_time, &
-                            set_time, get_time, operator( > ), get_calendar_type, NO_CALENDAR
+  use time_manager_mod!, only : time_type, get_date, set_date, operator ( >= ) , operator ( + ) , days_in_month, &
+                      !      operator( - ), operator ( / ) , days_in_year, increment_time, &
+                      !      set_time, get_time, operator( > ), get_calendar_type, NO_CALENDAR
   use get_cal_time_mod, only : get_cal_time
   use mpp_domains_mod, only : domain2d, mpp_get_compute_domain, mpp_get_data_domain, &
        mpp_get_global_domain, NULL_DOMAIN2D
@@ -137,7 +137,7 @@ module time_interp_external_mod
   type(ext_fieldtype), save, private, pointer :: field(:) => NULL()
   type(filetype),      save, private, pointer :: opened_files(:) => NULL()
 !Balaji: really should use field%missing
-  real(DOUBLE_KIND), private, parameter :: time_interp_missing=-1e99
+  real(DOUBLE_KIND), private, parameter :: time_interp_missing=-1e35
   contains
 
 ! <SUBROUTINE NAME="time_interp_external_init">

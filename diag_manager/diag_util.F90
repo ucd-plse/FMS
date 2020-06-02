@@ -65,20 +65,20 @@ MODULE diag_util_mod
        & write_version_number, do_cf_compliance
   USE fms_io_mod, ONLY: get_tile_string, return_domain, string, get_instance_filename
   USE mpp_domains_mod,ONLY: domain1d, domain2d, mpp_get_compute_domain, null_domain1d, null_domain2d,&
-       & OPERATOR(.NE.), OPERATOR(.EQ.), mpp_modify_domain, mpp_get_domain_components,&
+       & mpp_domain_ne, mpp_domain_eq, mpp_modify_domain, mpp_get_domain_components,&
        & mpp_get_ntile_count, mpp_get_current_ntile, mpp_get_tile_id, mpp_mosaic_defined, mpp_get_tile_npes,&
        & domainUG, null_domainUG
-  USE time_manager_mod,ONLY: time_type, OPERATOR(==), OPERATOR(>), NO_CALENDAR, increment_date,&
-       & increment_time, get_calendar_type, get_date, get_time, leap_year, OPERATOR(-),&
-       & OPERATOR(<), OPERATOR(>=), OPERATOR(<=), OPERATOR(==)
+  USE time_manager_mod!,ONLY: time_type, OPERATOR(==), OPERATOR(>), NO_CALENDAR, increment_date,&
+       !& increment_time, get_calendar_type, get_date, get_time, leap_year, OPERATOR(-),&
+       !& OPERATOR(<), OPERATOR(>=), OPERATOR(<=), OPERATOR(==)
   USE mpp_io_mod, ONLY: mpp_close
   USE mpp_mod, ONLY: mpp_npes
   USE fms_io_mod, ONLY: get_instance_filename, get_mosaic_tile_file_ug
   USE constants_mod, ONLY: SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE
 
-#ifdef use_netCDF
-  USE netcdf, ONLY: NF90_CHAR
-#endif
+!#ifdef use_netCDF
+!  USE netcdf, ONLY: NF90_CHAR
+!#endif
 
   IMPLICIT NONE
   PRIVATE
@@ -134,6 +134,7 @@ MODULE diag_util_mod
 #include <file_version.h>
 
   LOGICAL :: module_initialized = .FALSE.
+  integer, parameter :: nf90_char = 2
 
 
 CONTAINS
@@ -356,13 +357,13 @@ CONTAINS
     yend = -1
 
     Domain2 = get_domain2d(axes)
-    IF ( Domain2 .NE. NULL_DOMAIN2D ) THEN
+    IF ( mpp_domain_ne(Domain2,NULL_DOMAIN2D) ) THEN
        CALL mpp_get_compute_domain(Domain2, xbegin, xend, ybegin, yend)
        CALL mpp_get_domain_components(Domain2, Domain1x, Domain1y)
     ELSE
        DO i = 1, MIN(SIZE(axes(:)),2)
           Domain1 = get_domain1d(axes(i))
-          IF ( Domain1 .NE. NULL_DOMAIN1D ) THEN
+          IF ( mpp_domain_ne(Domain1,NULL_DOMAIN1D) ) THEN
              CALL get_diag_axis_cart(axes(i),cart)
              SELECT CASE(cart)
              CASE ('X')
@@ -1861,25 +1862,25 @@ CONTAINS
           all_scalar_or_1d = .FALSE.
           domain2 = get_domain2d ( output_fields(field_num)%axes(1:num_axes) )
           domainU = get_domainUG ( output_fields(field_num)%axes(1) )
-          IF ( domain2 .NE. NULL_DOMAIN2D ) EXIT
+          IF ( mpp_domain_ne(domain2, NULL_DOMAIN2D) ) EXIT
        ELSEIF (num_axes == 1) THEN
-          if (domainU .EQ. null_domainUG) then
+          if (mpp_domain_eq(domainU,null_domainUG)) then
                domainU = get_domainUG ( output_fields(field_num)%axes(num_axes) )
           endif
        END IF
     END DO
 
     IF (.NOT. all_scalar_or_1d) THEN
-        IF (domainU .NE. null_domainUG .AND. domain2 .NE. null_domain2D) THEN
+        IF (mpp_domain_ne(domainU, null_domainUG) .AND. mpp_domain_ne(domain2,null_domain2D)) THEN
             CALL error_mesg('diag_util_mod::opening_file', &
                             'Domain2 and DomainU are somehow both set.', &
                             FATAL)
-        ELSEIF (domainU .EQ. null_domainUG) THEN
-            IF (domain2 .EQ. NULL_DOMAIN2D) THEN
+        ELSEIF (mpp_domain_eq(domainU,null_domainUG)) THEN
+            IF (mpp_domain_eq(domain2,NULL_DOMAIN2D)) THEN
                 CALL return_domain(domain2)
             ENDIF
 
-            IF (domain2 .EQ. NULL_DOMAIN2D) THEN
+            IF (mpp_domain_eq(domain2,NULL_DOMAIN2D)) THEN
 
                 !Fix for the corner-case when you have a file that contains
                 !2D field(s) that is not associated with a domain tile, as
@@ -1914,7 +1915,7 @@ CONTAINS
             ENDIF
         ENDIF
     ENDIF
-    IF ( domainU .ne. null_domainUG) then
+    IF ( mpp_domain_ne(domainU, null_domainUG)) then
 !          ntileMe = mpp_get_UG_current_ntile(domainU)
 !          ALLOCATE(tile_id(ntileMe))
 !          tile_id = mpp_get_UG_tile_id(domainU)
