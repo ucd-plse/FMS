@@ -3309,7 +3309,7 @@ end function date_to_string
 !! \brief This routine converts the integer t%days to a string
 subroutine time_list_error (T,Terr)
   type(time_type),  intent(in)            :: t     !< time_type input
-  character(len=*),   allocatable         :: terr  !< String holding the t%days
+  character(len=:),   allocatable         :: terr  !< String holding the t%days
 !> Allocate the string
   allocate (character(len=10) :: terr)
 !> Write the integer to the string
