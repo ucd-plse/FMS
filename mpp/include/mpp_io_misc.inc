@@ -175,6 +175,10 @@
 #endif
       endif
 
+#ifdef use_PIO
+      call mpp_pio_init()
+#endif
+
       call mpp_io_set_stack_size(131072) ! default initial value
       call mpp_sync()
       if( io_clocks_on )then
@@ -224,7 +228,15 @@
 #ifdef use_netCDF
 !close all open netCDF units
       do unit = maxunits+1,2*maxunits
+#ifndef use_PIO
          if( mpp_file(unit)%opened )error = NF_CLOSE(mpp_file(unit)%ncid)
+#else
+         if( mpp_file(unit)%action == MPP_RDONLY) then
+            if( mpp_file(unit)%opened )error = NF_CLOSE(mpp_file(unit)%ncid)
+         else
+            if( mpp_file(unit)%opened )call PIO_closefile(mpp_file(unit)%fileDesc)
+         endif
+#endif
       end do
 #endif
 
@@ -275,7 +287,16 @@
 
       if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
 #ifdef use_netCDF
+#ifndef use_PIO
           error = NF_SYNC(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+#else
+         if( mpp_file(unit)%action == MPP_RDONLY) then
+            error = NF_SYNC(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+         else
+            call PIO_syncfile(mpp_file(unit)%fileDesc)
+            !if( mpp_file(unit)%opened )call PIO_closefile(mpp_file(unit)%fileDesc) ! TODO: is this needed?
+         endif
+#endif
 #endif
       else
           FLUSH(unit)

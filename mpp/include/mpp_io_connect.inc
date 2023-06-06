@@ -206,6 +206,13 @@
       character(len=128)                    :: f_test
 
 !----------
+! PIO flag
+      logical :: pio_flag = .false.
+#ifdef use_PIO
+      pio_flag = .true.
+#endif
+
+!----------
 !ug support
      !Only allow one type of mpp domain.
       if (present(domain) .and. present(domain_ug)) then
@@ -291,6 +298,13 @@
 !----------
 
       endif
+
+      ! pio support
+      if(pio_flag .and. form_flag == MPP_NETCDF) then
+        write_on_this_pe = .true.
+        !read_on_this_pe = .true.
+      endif
+
       if( action_flag == MPP_RDONLY) write_on_this_pe = .false.
       !get a unit number
       if( .NOT. write_on_this_pe .AND. action_flag.NE.MPP_RDONLY .AND. .NOT. io_domain_exist)then
@@ -547,7 +561,33 @@
 #endif
 
 #ifdef use_netCDF
-#ifdef use_netCDF3
+#ifdef use_PIO
+          if( action_flag.EQ.MPP_WRONLY )then
+              if(debug) write(*,*) 'Blocksize for create of ', trim(mpp_file(unit)%name),' is ', fsize
+              error = mpp_pio_openfile(mpp_file(unit)%fileDesc, mpp_file(unit)%name, action_flag, mpp_file(unit)%ncid)
+              call netcdf_err( error, mpp_file(unit) )
+              if( verbose )print '(a,i6,i16)', 'MPP_OPEN: new netCDF file: pe, filename=', pe, mpp_file(unit)%name
+          else if( action_flag.EQ.MPP_OVERWR )then
+              if(debug) write(*,*) 'Blocksize for create of ', trim(mpp_file(unit)%name),' is ', fsize
+              error = mpp_pio_openfile(mpp_file(unit)%fileDesc, mpp_file(unit)%name, action_flag, mpp_file(unit)%ncid)
+              call netcdf_err( error, mpp_file(unit) )
+              action_flag = MPP_WRONLY !after setting clobber, there is no further distinction btwn MPP_WRONLY and MPP_OVERWR
+              if( verbose )print '(a,i6,i16)', 'MPP_OPEN: overwrite netCDF file: pe, filename=', pe, mpp_file(unit)%name
+          else if( action_flag.EQ.MPP_APPEND )then
+              print *, "debug ", __FILE__, __LINE__
+              call mpp_error(FATAL,'TODO - NOT_IMPLEMENTED')
+          else if( action_flag.EQ.MPP_RDONLY )then
+              inquire(file=trim(mpp_file(unit)%name),EXIST=exists)
+              if (.NOT.exists) call mpp_error(FATAL,'MPP_OPEN:'&
+                   &//trim(mpp_file(unit)%name)//' does not exist.')
+              error=NF__OPEN(trim(mpp_file(unit)%name),NF_NOWRITE,fsize,mpp_file(unit)%ncid);call netcdf_err(error,mpp_file(unit))
+              if( verbose )print '(a,i6,i16,i4)', 'MPP_OPEN: opening existing netCDF file: pe, ncid, time_axis_id=',&
+                   pe, mpp_file(unit)%ncid, mpp_file(unit)%id
+              mpp_file(unit)%format=form_flag ! need this for mpp_read
+              call mpp_read_meta(unit, read_time=.TRUE.)
+          end if
+          mpp_file(unit)%opened = .TRUE.
+#elif use_netCDF3
           if( action_flag.EQ.MPP_WRONLY )then
               if(debug) write(*,*) 'Blocksize for create of ', trim(mpp_file(unit)%name),' is ', fsize
               error = NF__CREATE( trim(mpp_file(unit)%name), NF_NOCLOBBER, inital, fsize, mpp_file(unit)%ncid )
@@ -808,7 +848,15 @@
       if( mpp_file(unit)%opened) then
          if( mpp_file(unit)%format.EQ.MPP_NETCDF )then
 #ifdef use_netCDF
-            error = NF_CLOSE(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+#ifndef use_PIO
+      error = NF_CLOSE(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) )
+#else
+      if( mpp_file(unit)%action == MPP_RDONLY )then
+          error = NF_CLOSE(mpp_file(unit)%ncid); call netcdf_err( error, mpp_file(unit) ) ! todo
+      else
+          call PIO_closefile(mpp_file(unit)%fileDesc)
+      endif
+#endif
 #endif
          else
             close(unit,status=status)
